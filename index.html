@@ -4,11 +4,14 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>خريطة أحياء حائل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-  html,body{margin:0;height:100%;background:#e7eef2;font-family:"Segoe UI",Tahoma,"Noto Naskh Arabic",Arial,sans-serif;color:#17202a}
+  html,body{margin:0;height:100%;background:#e7eef2;font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;color:#17202a}
   #map{position:fixed;inset:0;z-index:1}
   .leaflet-container{font-family:inherit;background:#d5e0e6}
   .filter{
@@ -83,7 +86,27 @@
     .sheet{left:auto;right:14px;top:92px;bottom:14px;width:360px;max-height:none}
   }
 
-  .leaflet-top.leaflet-right{top:210px;right:8px;z-index:600}
+  .chips{position:fixed;z-index:550;top:164px;right:14px;left:14px;display:flex;justify-content:safe center;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:0 0 auto;display:flex;align-items:center;gap:8px;border:1px solid #dde3ea;
+    background:#fff;border-radius:8px;padding:8px 14px;
+    font-family:inherit;font-size:13px;font-weight:600;color:#3a4756;cursor:pointer;
+    box-shadow:0 2px 8px rgba(20,30,40,.10);transition:border-color .15s,color .15s,background .15s
+  }
+  .chip:hover{border-color:#b9c3cf}
+  .chip i{width:4px;height:18px;border-radius:2px;background:var(--c)}
+  .chip span{font-size:12px;font-weight:500;color:#7a8794;font-variant-numeric:tabular-nums}
+  .chip.on{background:#fff;border-color:#17202a;color:#17202a;box-shadow:0 2px 10px rgba(20,30,40,.18)}
+  .chip.on[style*="--c"]{border-color:var(--c);box-shadow:inset 0 -3px 0 var(--c),0 2px 10px rgba(20,30,40,.18)}
+  .chip.on span{color:#17202a;font-weight:700}
+  @media (min-width:900px){
+    .chips{top:14px;right:308px;left:14px;padding-bottom:2px}
+  }
+  @media (min-width:1200px){
+    .chips{left:308px}
+  }
+  .leaflet-top.leaflet-right{top:224px;right:8px;z-index:600}
   .leaflet-control-layers{border:0;border-radius:10px;box-shadow:0 8px 18px rgba(20,30,40,.18);background:#fff}
   .leaflet-control-layers-toggle{
     width:44px;height:44px;background-size:28px 28px;background-position:center;background-repeat:no-repeat;
@@ -103,6 +126,7 @@
   </select>
 </div>
 </div>
+<div class="chips" id="chips" role="group" aria-label="تصنيف الأحياء حسب المؤشر"></div>
 <section class="sheet" id="sheet" aria-live="polite">
   <div class="sheet-top">
     <div>
@@ -149,7 +173,21 @@ function qolFor(id){
   let n=0; for (const ch of String(id)) n=(n*33+ch.charCodeAt(0))>>>0;
   return 62 + (n%29);
 }
+// فئات التصنيف حسب مؤشر جودة الحياة (من 100) — عدّل الحدود (min) والألوان من هنا
+const TIERS=[
+  {key:'top',     label:'أحياء متميزة',        min:85, color:'#1a9850'},
+  {key:'stable',  label:'محافظة على المستوى',  min:75, color:'#2b7bba'},
+  {key:'improve', label:'تحتاج تحسينًا',       min:65, color:'#f0a020'},
+  {key:'high',    label:'أولوية عالية',        min:0,  color:'#d73027'}
+];
+let activeTier=null;
+function tierOf(id){ const s=qolFor(id); return TIERS.find(t=>s>=t.min)||TIERS[TIERS.length-1]; }
+function tierKey(id){ return tierOf(id).key; }
 function styleFor(id, on){
+  if(activeTier){
+    const c=tierOf(id).color;
+    return {color:c, weight:on?4:3, opacity:1, fillColor:c, fillOpacity:on?0.16:0.06};
+  }
   return {color:on?'#4b5563':'#8b949e', weight:on?2.2:1.3, fillColor:'#ffffff', fillOpacity:on?0.55:0.28};
 }
 const layers={};
@@ -176,6 +214,7 @@ function refill(filter){
   const cur=pick.value;
   pick.innerHTML='<option value="">كل الأحياء</option>';
   names.forEach(p=>{
+    if(activeTier && tierKey(p.id)!==activeTier) return;
     if(filter && !p.label.includes(filter) && !p.name_en.toLowerCase().includes(filter.toLowerCase())) return;
     const o=document.createElement('option');
     o.value=p.id; o.textContent=p.label; pick.appendChild(o);
@@ -206,6 +245,8 @@ function select(id, fromMap){
   document.getElementById('dName').textContent=p.label;
   document.getElementById('dEn').textContent=p.name_en||'';
   document.getElementById('dScore').innerHTML=score+'<small>/100</small>';
+  document.getElementById('dScore').style.borderColor=tierOf(id).color;
+  document.getElementById('dScore').style.borderWidth='2px';
   document.getElementById('qolNote').textContent = (EXTRA[id]&&EXTRA[id].qol!=null) ? 'من 100' : 'من 100 — رقم تجريبي حتى يُضاف الرسمي';
   document.getElementById('sheet').classList.add('open');
   Object.entries(layers).forEach(([k,v])=>{ if(map.hasLayer(v.layer)) v.layer.setStyle(styleFor(k,k===id)); });
@@ -238,17 +279,18 @@ function showAll(){
   selected=null;
   collapseChart();
   Object.entries(layers).forEach(([k,v])=>{
-    if(!map.hasLayer(v.layer)) v.layer.addTo(group);
-    v.layer.setStyle(styleFor(k,false));
+    const ok=!activeTier||tierKey(k)===activeTier;
+    if(ok){ if(!map.hasLayer(v.layer)) v.layer.addTo(group); v.layer.setStyle(styleFor(k,false)); }
+    else if(map.hasLayer(v.layer)) group.removeLayer(v.layer);
   });
   map.fitBounds(group.getBounds(),{padding:[28,28]});
   document.getElementById('sheet').classList.remove('open');
   }
 function applyFilter(id){
   Object.entries(layers).forEach(([k,v])=>{
-    const show=!id||k===id;
+    const show=(!id||k===id)&&(!activeTier||tierKey(k)===activeTier);
     if(show){ if(!map.hasLayer(v.layer)) v.layer.addTo(group); }
-    else if(map.hasLayer(v.layer)) map.removeLayer(v.layer);
+    else if(map.hasLayer(v.layer)) group.removeLayer(v.layer);
   });
   if(id) select(id,false);
   else showAll();
@@ -263,6 +305,30 @@ document.getElementById('close').addEventListener('click', ()=>{
 });
 document.getElementById('openChart').addEventListener('click', openChart);
 document.getElementById('hideChart').addEventListener('click', collapseChart);
+Chart.defaults.font.family='"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif';
+const chipsEl=document.getElementById('chips');
+function renderChips(){
+  chipsEl.innerHTML='';
+  const total=Object.keys(layers).length;
+  const mk=(key,label,color,count)=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.className='chip'+(activeTier===key?' on':'');
+    if(color) b.style.setProperty('--c',color);
+    b.innerHTML=(color?'<i></i>':'')+label+'<span>'+count+'</span>';
+    b.addEventListener('click',()=>setTier(activeTier===key?null:key));
+    chipsEl.appendChild(b);
+  };
+  mk(null,'الكل','',total);
+  TIERS.forEach(t=>mk(t.key,t.label,t.color,Object.keys(layers).filter(id=>tierKey(id)===t.key).length));
+}
+function setTier(key){
+  activeTier=key;
+  renderChips();
+  refill(q.value.trim());
+  applyFilter(pick.value);
+}
+renderChips();
 L.control.layers({'خريطة': streets, 'قمر صناعي': satellite}, null, {position:'topright', collapsed:true}).addTo(map);
 </script>
 </body>
