@@ -27,9 +27,14 @@
   .frow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
   .alink{font-size:12px;font-weight:600;color:#0f6e56;text-decoration:none;margin:0 6px 6px}
   .alink:hover{text-decoration:underline}
+  .isel{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+  .isel .ib{border:1px solid #d5dbe3;background:#fff;color:#334155;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
+  .isel .ib.on{background:#17202a;color:#fff;border-color:#17202a}
+  .isel .it{width:100%;font-size:12px;font-weight:800;color:#5d6b78;margin:0 6px}
   .raw{margin-top:10px}
   .rw{display:grid;grid-template-columns:1fr auto 44px;gap:8px;align-items:baseline;padding:6px 2px;border-bottom:1px solid #eef1f5;font-size:13px}
   .rw b{font-weight:600}
+  .rt{margin:12px 2px 2px;font-size:12px;font-weight:700;color:#6b7785}
   .rw em{font-style:normal;font-size:12px;color:#6b7785;text-align:left}
   .filter label{display:block;font-size:12px;font-weight:800;color:#5d6b78;margin:0 6px 6px}
   .filter input,.filter select{
@@ -104,7 +109,7 @@
   .chip:hover{border-color:#b9c3cf}
   .chip i{width:4px;height:18px;border-radius:2px;background:var(--c)}
   .chip span{font-size:12px;font-weight:500;color:#7a8794;font-variant-numeric:tabular-nums}
-  .chip.on{background:#fff;border-color:#17202a;color:#17202a;box-shadow:0 2px 10px rgba(20,30,40,.18)}
+  .chip.on{background:#fff;border-color:#1b5e3f;color:#17202a;box-shadow:0 2px 10px rgba(20,30,40,.18)}
   .chip.on[style*="--c"]{border-color:var(--c);box-shadow:inset 0 -3px 0 var(--c),0 2px 10px rgba(20,30,40,.18)}
   .chip.on span{color:#17202a;font-weight:700}
   @media (min-width:900px){
@@ -113,7 +118,7 @@
   @media (min-width:1200px){
     .chips{left:308px}
   }
-  .leaflet-top.leaflet-right{top:224px;right:8px;z-index:600}
+  .leaflet-top.leaflet-left{top:70px;left:8px;z-index:600}
   .leaflet-control-layers{border:0;border-radius:10px;box-shadow:0 8px 18px rgba(20,30,40,.18);background:#fff}
   .leaflet-control-layers-toggle{
     width:44px;height:44px;background-size:28px 28px;background-position:center;background-repeat:no-repeat;
@@ -121,6 +126,40 @@
   }
   .leaflet-control-layers-expanded{padding:8px 10px}
   .leaflet-control-layers-base label{font-size:14px;display:flex;gap:6px;align-items:center;margin:6px 0}
+
+  /* ===== تنسيق رسمي ===== */
+  :root{--navy:#1b5e3f;--line:#cfd6df;--ink:#17202a;--mut:#5d6b78}
+  .filter{padding:0;border-radius:4px;border:1px solid var(--line);background:#fff;box-shadow:0 2px 10px rgba(20,40,60,.14);backdrop-filter:none;overflow:hidden}
+  .frow{background:var(--navy);padding:9px 14px;display:block}
+  .filter label{color:#fff;margin:0;font-size:13px;font-weight:700;letter-spacing:.2px}
+  .filter input,.filter select{width:calc(100% - 28px);margin:12px 14px 0;border-radius:3px;border:1px solid var(--line);background:#fff;padding:9px 10px;font-size:14px;box-sizing:border-box}
+  .filter select{margin-top:8px}
+  .filter input:focus,.filter select:focus{border-color:var(--navy);box-shadow:none}
+  .isel{margin:12px 14px 14px;gap:6px;border-top:1px solid #e6eaef;padding-top:10px}
+  .isel .it{margin:0 0 2px;color:var(--mut);font-size:12px;font-weight:700}
+  .isel .ib{border-radius:3px;border:1px solid var(--line);padding:5px 10px;font-size:12px;font-weight:600;background:#fff;color:#2b3745}
+  .isel .ib.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .sheet{padding:0;border-radius:4px;border:1px solid var(--line);box-shadow:0 2px 14px rgba(20,40,60,.20)}
+  .sheet-top{background:var(--navy);color:#fff;padding:14px 16px;align-items:center}
+  .sheet h2{font-size:19px;font-weight:700;color:#fff}
+  .sheet .en{color:#c4e0d2;font-size:12px}
+  .x{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:3px;width:30px;height:30px;font-size:16px}
+  .x:hover{background:rgba(255,255,255,.14)}
+  .qol{margin:14px 16px 0;border-radius:3px;background:#f5f7f9;border:1px solid var(--line);padding:10px 12px}
+  .qol .t{font-size:13px;color:var(--ink)}
+  .score{border-radius:3px;height:44px;min-width:70px;font-size:21px;background:#fff;border-width:2px}
+  .raw{margin:8px 16px 0}
+  .rw{padding:8px 2px;font-size:13px;border-bottom:1px solid #e6eaef}
+  .rt{margin:14px 0 4px;padding:6px 8px;background:#e8f2ec;color:var(--navy);font-size:12px;border-radius:2px}
+  .chart-btn{width:calc(100% - 32px);margin:14px 16px 16px;border-radius:3px;background:var(--navy);color:#fff;border:0;padding:11px;font-size:14px;font-weight:700}
+  .chart-btn:hover{background:#247a52}
+  .chart-panel{margin:0 16px 16px}
+  .back{border-radius:3px}
+  .chip{border-radius:3px;box-shadow:none;border:1px solid var(--line);padding:8px 16px}
+  .chip.on{box-shadow:inset 0 -3px 0 var(--c,#1b5e3f)}
+  .chip.on[style*="--c"]{box-shadow:inset 0 -3px 0 var(--c)}
+  .leaflet-control-layers{border-radius:4px;box-shadow:0 2px 8px rgba(20,40,60,.2)}
+  @media (min-width:900px){ .sheet{top:var(--st,92px)} .sheet.expanded{top:14px} }
 </style>
 </head>
 <body>
@@ -131,6 +170,7 @@
   <select id="pick" aria-label="الأحياء">
     <option value="">كل الأحياء</option>
   </select>
+  <div class="isel" id="isel"></div>
 </div>
 </div>
 <div class="chips" id="chips" role="group" aria-label="تصنيف الأحياء حسب المؤشر"></div>
@@ -186,11 +226,13 @@ light.addTo(map);
 // ===== بيانات المؤشرات (تأتي من صفحة الإدارة admin.html عبر localStorage أو ملف qol-data.json) =====
 function normQD(d){
   d=d||{};
-  const th=(d.settings&&Array.isArray(d.settings.thresholds)&&d.settings.thresholds.length===3)?d.settings.thresholds.map(Number):[85,75,65];
+  const rt=(d.settings&&Array.isArray(d.settings.thresholds))?d.settings.thresholds.map(Number):[];
+  const th=rt.length===2?rt:(rt.length===3?[rt[1],rt[2]]:[75,60]);
   return {
     indicators:Array.isArray(d.indicators)?d.indicators.map(i=>({key:String(i.key),name:String(i.name),weight:Number(i.weight)||0,unit:i.unit==null?'':String(i.unit)})):[],
     computed:(d.computed&&typeof d.computed==='object')?d.computed:{},
     values:(d.values&&typeof d.values==='object')?d.values:{},
+    info:{fields:(d.info&&Array.isArray(d.info.fields))?d.info.fields.map(f=>({key:String(f.key),name:String(f.name),unit:f.unit==null?'':String(f.unit)})):[],values:(d.info&&d.info.values&&typeof d.info.values==='object')?d.info.values:{}},
     settings:{thresholds:th}
   };
 }
@@ -201,14 +243,20 @@ function loadQD(){
 let QD=loadQD();
 function computeQol(id){ const c=QD.computed&&QD.computed[id]; return c?c.overall:null; }
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function fmtN(x){ return (Math.round(x*100)/100).toLocaleString('ar-SA',{maximumFractionDigits:2}); }
+function parkWord(n){ n=Math.round(Number(n)); if(n===2) return 'حديقتان'; return (n>=3&&n<=10)?'حدائق':'حديقة'; }
+function fmtN(x){ return (Math.round(x*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}); }
 function renderRaw(id){
   const box=document.getElementById('dRaw'), c=QD.computed&&QD.computed[id], v=QD.values[id]||{};
-  if(!c){ box.innerHTML=''; return; }
-  box.innerHTML=QD.indicators.map(i=>{
+  let html='';
+  if(c) html+=QD.indicators.map(i=>{
+    if(viewInds.length&&!viewInds.includes(i.key)) return '';
     const x=v[i.key]; if(x==null||x===''||c.scores[i.key]==null) return '';
-    return '<div class="rw"><span>'+esc(i.name)+'</span><b>'+fmtN(x)+(i.unit?' '+esc(i.unit):'')+'</b><em>'+c.scores[i.key]+'</em></div>';
+    return '<div class="rw"><span>'+esc(i.name)+'</span><b>'+fmtN(x)+(i.unit?' '+esc(i.unit):'')+'</b><em>'+((c.pct&&c.pct[i.key]!=null)?fmtN(c.pct[i.key])+'%':c.scores[i.key])+'</em></div>';
   }).join('');
+  const iv=(QD.info.values&&QD.info.values[id])||{};
+  const rows=QD.info.fields.filter(f=>iv[f.key]!=null&&iv[f.key]!=='');
+  if(rows.length) html+='<div class="rt">بيانات الحي</div>'+rows.map(f=>'<div class="rw"><span>'+esc(f.name)+'</span><b>'+fmtN(iv[f.key])+(f.key==='parks'?' '+parkWord(iv[f.key]):(f.unit?' '+esc(f.unit):''))+'</b><em></em></div>').join('');
+  box.innerHTML=html;
 }
 function hasData(id){ return computeQol(id)!=null; }
 function qolFor(id){
@@ -220,13 +268,21 @@ function qolFor(id){
 }
 // فئات التصنيف حسب مؤشر جودة الحياة (من 100) — عدّل الحدود (min) والألوان من هنا
 const TIERS=[
-  {key:'top',     label:'أحياء متميزة',        min:QD.settings.thresholds[0], color:'#1a9850'},
-  {key:'stable',  label:'محافظة على المستوى',  min:QD.settings.thresholds[1], color:'#2b7bba'},
-  {key:'improve', label:'تحتاج تحسينًا',       min:QD.settings.thresholds[2], color:'#f0a020'},
-  {key:'high',    label:'أولوية عالية',        min:0,  color:'#d73027'}
+  {key:'good',  label:'مستوى جيد',     min:QD.settings.thresholds[0], color:'#2e7d4f'},
+  {key:'mid',   label:'يحتاج تحسينًا', min:QD.settings.thresholds[1], color:'#e0a82e'},
+  {key:'high',  label:'أولوية عالية',  min:0,  color:'#c0392b'}
 ];
 let activeTier=null;
-function tierOf(id){ const s=qolFor(id); return TIERS.find(t=>s>=t.min)||TIERS[TIERS.length-1]; }
+let viewInds=[];
+function viewScore(id){
+  if(!viewInds.length) return qolFor(id);
+  const c=QD.computed&&QD.computed[id]; if(!c) return null;
+  let sw=0,s=0;
+  viewInds.forEach(k=>{ const v=c.scores[k]; if(v==null) return; const ind=QD.indicators.find(i=>i.key===k); const w=(ind&&ind.weight>0)?ind.weight:1; sw+=w; s+=v*w; });
+  return sw? Math.round(s/sw*10)/10 : null;
+}
+const NOTIER={key:'none',label:'لا توجد بيانات',min:0,color:'#9aa5b1'};
+function tierOf(id){ const s=viewScore(id); if(s==null) return NOTIER; return TIERS.find(t=>s>=t.min)||TIERS[TIERS.length-1]; }
 function tierKey(id){ return tierOf(id).key; }
 function styleFor(id, on){
   const c=tierOf(id).color;
@@ -283,14 +339,14 @@ function select(id, fromMap){
   selected=id;
   collapseChart();
   const p=layers[id].props;
-  const score=qolFor(id);
+  const score=viewScore(id);
   document.getElementById('dName').textContent=p.label;
   document.getElementById('dEn').textContent=p.name_en||'';
-  document.getElementById('dScore').innerHTML=score+'<small>/100</small>';
+  document.getElementById('dScore').innerHTML=(score==null?'—':score)+'<small>/100</small>';
   document.getElementById('dScore').style.borderColor=tierOf(id).color;
   document.getElementById('dScore').style.borderWidth='2px';
   renderRaw(id);
-  document.getElementById('qolNote').textContent = hasData(id) ? 'من 100 — محسوب من مؤشرات الحي' : 'من 100 — رقم تجريبي حتى تُضاف المؤشرات';
+  document.getElementById('qolNote').textContent = viewInds.length ? 'من 100 — '+(viewInds.length>1?'متوسط المؤشرات المختارة':'درجة المؤشر المختار') : hasData(id) ? 'من 100 — محسوب من مؤشرات الحي' : 'من 100 — رقم تجريبي حتى تُضاف المؤشرات';
   document.getElementById('sheet').classList.add('open');
   Object.entries(layers).forEach(([k,v])=>{ if(map.hasLayer(v.layer)) v.layer.setStyle(styleFor(k,k===id)); });
   layers[id].layer.bringToFront();
@@ -335,8 +391,8 @@ function openChart(){
 }
 function applyQD(d){
   QD=Object.assign(normQD(d),{src:'file'});
-  TIERS.forEach((t,i)=>{ if(i<3) t.min=QD.settings.thresholds[i]; });
-  renderChips(); refill(q.value.trim()); applyFilter(pick.value);
+  TIERS.forEach((t,i)=>{ if(i<2) t.min=QD.settings.thresholds[i]; });
+  viewChanged();
 }
 function showAll(){
   selected=null;
@@ -391,6 +447,28 @@ function setTier(key){
   refill(q.value.trim());
   applyFilter(pick.value);
 }
+function restyle(){
+  Object.entries(layers).forEach(([k,v])=>{
+    v.layer.setStyle(styleFor(k,k===selected));
+    const s=viewScore(k);
+    v.layer.eachLayer(l=>{ if(l.setTooltipContent) l.setTooltipContent(v.props.label+(viewInds.length?' — '+(s==null?'لا توجد بيانات':s+'/100'):'')); });
+  });
+}
+function renderISel(){
+  const el=document.getElementById('isel');
+  viewInds=viewInds.filter(k=>QD.indicators.some(i=>i.key===k));
+  if(!QD.indicators.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div class="it">عرض حسب مؤشر</div>';
+  const mk=(label,on,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='ib'+(on?' on':''); b.textContent=label; b.addEventListener('click',fn); el.appendChild(b); };
+  mk('الكل',!viewInds.length,()=>{ viewInds=[]; viewChanged(); });
+  QD.indicators.forEach(i=>mk(i.name,viewInds.includes(i.key),()=>{ viewInds=viewInds.includes(i.key)?viewInds.filter(k=>k!==i.key):viewInds.concat(i.key); viewChanged(); }));
+}
+function viewChanged(){
+  renderISel(); setTimeout(placeSheet,0); renderChips(); restyle(); refill(q.value.trim()); applyFilter(pick.value);
+}
+function placeSheet(){ const f=document.querySelector('.filter'); if(f) document.documentElement.style.setProperty('--st',(f.getBoundingClientRect().bottom+12)+'px'); }
+window.addEventListener('resize',placeSheet); setTimeout(placeSheet,0);
+renderISel();
 renderChips();
 if(QD.src==='none'){
   fetch('qol-data.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.indicators)) applyQD(d); }).catch(()=>{});
@@ -399,7 +477,7 @@ window.addEventListener('storage',e=>{
   if(e.key!=='hailQol.v2'||!e.newValue) return;
   try{ const d=JSON.parse(e.newValue); if(d&&Array.isArray(d.indicators)) applyQD(d); }catch(err){}
 });
-L.control.layers({'فاتحة': light, 'خريطة': streets, 'قمر صناعي': satellite}, null, {position:'topright', collapsed:true}).addTo(map);
+L.control.layers({'فاتحة': light, 'خريطة': streets, 'قمر صناعي': satellite}, null, {position:'topleft', collapsed:true}).addTo(map);
 </script>
 </body>
 </html>

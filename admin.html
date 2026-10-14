@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>إدارة مؤشرات جودة الحياة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--ink:#17202a;--mut:#5d6b78;--line:#e3e8ee;--bg:#f4f6f8;--card:#fff;--acc:#0f6e56;--bad:#d73027}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;font-size:15px}
+  button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 16px}
+  .top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px}
+  .top h1{margin:0;font-size:19px;font-weight:700}
+  .top p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+  .acts{display:flex;align-items:center;gap:10px}
+  .saved{font-size:12px;color:var(--mut)}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid #d5dbe3;background:#fff;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;cursor:pointer;text-decoration:none;color:var(--ink);white-space:nowrap}
+  .btn:hover{border-color:#aab4c0}
+  .btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+  .btn.danger{color:var(--bad)}
+  main{padding:16px 16px 48px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;border-top:3px solid var(--c,#cfd6df)}
+  .stat b{display:block;font-size:24px;font-weight:700;line-height:1.2;font-variant-numeric:tabular-nums}
+  .stat b small{font-size:13px;color:var(--mut);font-weight:500}
+  .stat span{font-size:12px;color:var(--mut)}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+  .tabs button{border:0;background:none;padding:11px 16px;font-weight:600;color:var(--mut);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+  .tabs button.on{color:var(--ink);border-bottom-color:var(--acc)}
+  .panel{display:none}.panel.on{display:block}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .card h2{margin:0 0 4px;font-size:16px}
+  .card .sub{margin:0 0 14px;font-size:13px;color:var(--mut);line-height:1.8}
+  .formula{background:#f7f9fb;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px;line-height:1.9}
+  .irow{display:grid;grid-template-columns:28px 1fr 130px 64px 36px;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #f0f2f5}
+  .irow .n{color:var(--mut);font-size:13px;text-align:center}
+  .irow input[type=text],.irow input[type=number]{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff}
+  .irow input:focus,.tq:focus,.sel:focus,.th-item input:focus,td input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(15,110,86,.12)}
+  .irow .w{display:flex;align-items:center;gap:6px}
+  .irow .w em{font-style:normal;font-size:12px;color:var(--mut)}
+  .irow .pct{font-size:13px;font-weight:600;color:var(--acc);text-align:center;font-variant-numeric:tabular-nums}
+  .opts{grid-column:2 / -1;display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--mut)}
+  .opts label{display:flex;align-items:center;gap:6px}
+  .opts select,.opts input.iu,.opts input.imx{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff;color:var(--ink)}
+  .opts input.iu{width:80px}.opts input.itot{width:130px;border:1px solid var(--line);border-radius:8px;padding:6px 8px}.opts input.imx{width:80px}
+  .opts input:disabled,.opts select:disabled{opacity:.45}
+  .icon{border:0;background:#f2f4f7;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px;color:#556}
+  .icon:hover{background:#fde8e6;color:var(--bad)}
+  .row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;align-items:center}
+  .total{margin-inline-start:auto;font-size:13px;color:var(--mut)}
+  .th-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .th-item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;border-right:4px solid var(--c)}
+  .th-item label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+  .th-item input{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .th-item small{display:block;margin-top:6px;color:var(--mut);font-size:12px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .tq{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#fff;min-width:200px}
+  .grow{flex:1}
+  .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff;max-height:68vh}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:860px}
+  th,td{padding:6px 8px;border-bottom:1px solid #f0f2f5;text-align:center;white-space:nowrap;vertical-align:top}
+  thead th{position:sticky;top:0;background:#f7f9fb;font-size:12px;font-weight:600;color:var(--mut);z-index:2;border-bottom:1px solid var(--line);white-space:normal;min-width:96px;vertical-align:bottom}
+  thead th small{display:block;font-weight:400;font-size:11px;margin-top:2px}
+  td.nm,th.nm{position:sticky;right:0;background:#fff;text-align:right;font-weight:600;z-index:1;min-width:150px;border-left:1px solid #f0f2f5;vertical-align:middle}
+  thead th.nm{background:#f7f9fb;z-index:3}
+  td input{width:82px;border:1px solid transparent;background:#f7f9fb;border-radius:6px;padding:6px 4px;text-align:center;font-variant-numeric:tabular-nums}
+  td input:hover{border-color:var(--line)}
+  td input:focus{background:#fff}
+  td small.sc{display:block;font-size:11px;color:var(--mut);margin-top:2px;min-height:14px}
+  th.infoh,td.infoc{background:#fafbfc}
+  th.infoh:first-of-type,td.infoc:first-of-type{}
+  td.ov{font-weight:700;font-variant-numeric:tabular-nums;vertical-align:middle}
+  td.tg{vertical-align:middle}
+  .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+  .tag i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+  .chart-grid{display:grid;grid-template-columns:1fr 280px;gap:16px}
+  @media (max-width:860px){.chart-grid{grid-template-columns:1fr}.irow{grid-template-columns:24px 1fr 100px 52px 32px}}
+  .sel{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#fff;min-width:240px}
+  .score-card{text-align:center}
+  .score-card .big{font-size:52px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+  .score-card .big small{font-size:16px;color:var(--mut);font-weight:500}
+  .score-card .rank{margin-top:10px;font-size:13px;color:var(--mut)}
+  .empty{padding:40px 12px;text-align:center;color:var(--mut)}
+  .note{font-size:12px;color:var(--mut);margin:10px 2px 0;line-height:1.9}
+  .miss{display:inline-block;background:#fdecea;color:#b42318;border-radius:6px;padding:2px 7px;font-size:11px;margin:1px 2px}
+  .okc{color:#1a7f4b;font-size:12px;font-weight:600}
+  td.infoc input.emp{background:#fdecea}
+  td.infoc input.emp:focus{background:#fff}
+  td.mc{white-space:normal;min-width:210px;text-align:right}
+  .mfsum{font-size:13px;color:var(--mut);margin:0 2px 10px;line-height:1.9}
+  ul.notes{margin:0 0 12px;padding-inline-start:18px;font-size:13px;color:var(--mut);line-height:1.9}
+  td.nm2{text-align:right;font-weight:600}
+  input[type=file]{display:none}
+</style>
+</head>
+<body class="locked">
+<div id="gate" style="position:fixed;inset:0;z-index:99999;background:#eef1f5;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Sans Arabic',Tahoma,Arial,sans-serif;direction:rtl">
+  <form id="gateForm" style="background:#fff;border:1px solid #cfd6df;border-radius:6px;box-shadow:0 2px 14px rgba(20,40,60,.15);width:min(340px,calc(100vw - 32px));overflow:hidden">
+    <div style="background:#1b5e3f;color:#fff;padding:12px 16px;font-weight:700;font-size:15px">لوحة الإدارة</div>
+    <div style="padding:16px">
+      <label for="gatePw" style="display:block;font-size:13px;color:#5d6b78;margin-bottom:6px">أدخل رمز الدخول</label>
+      <input id="gatePw" type="password" autocomplete="current-password" style="width:100%;box-sizing:border-box;border:1px solid #cfd6df;border-radius:3px;padding:10px;font-size:15px;font-family:inherit"/>
+      <div id="gateErr" style="color:#c0392b;font-size:12px;min-height:18px;margin-top:6px"></div>
+      <button type="submit" style="width:100%;background:#1b5e3f;color:#fff;border:0;border-radius:3px;padding:10px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">دخول</button>
+    </div>
+  </form>
+</div>
+<style>body.locked > *:not(#gate){display:none !important}</style>
+<script>
+(function(){
+  var H='b274f11c62e0f32d4f875377531c96c0eee2137f24de739812af14fc5d04b2e1';
+  function sha256(str){
+    var K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    var h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    var b=unescape(encodeURIComponent(str)),n=b.length,i,j,bytes=[];
+    for(i=0;i<n;i++)bytes.push(b.charCodeAt(i));
+    bytes.push(0x80);while(bytes.length%64!==56)bytes.push(0);
+    var bits=n*8;for(i=7;i>=0;i--)bytes.push(i>3?0:(bits>>>(i*8))&255);
+    function rr(x,c){return (x>>>c)|(x<<(32-c));}
+    for(var o=0;o<bytes.length;o+=64){
+      var w=[];for(i=0;i<16;i++)w[i]=(bytes[o+4*i]<<24)|(bytes[o+4*i+1]<<16)|(bytes[o+4*i+2]<<8)|bytes[o+4*i+3];
+      for(i=16;i<64;i++){var s0=rr(w[i-15],7)^rr(w[i-15],18)^(w[i-15]>>>3),s1=rr(w[i-2],17)^rr(w[i-2],19)^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)|0;}
+      var a=h[0],bb=h[1],c=h[2],d=h[3],e=h[4],f=h[5],g=h[6],hh=h[7];
+      for(i=0;i<64;i++){
+        var S1=rr(e,6)^rr(e,11)^rr(e,25),ch=(e&f)^(~e&g),t1=(hh+S1+ch+K[i]+w[i])|0;
+        var S0=rr(a,2)^rr(a,13)^rr(a,22),mj=(a&bb)^(a&c)^(bb&c),t2=(S0+mj)|0;
+        hh=g;g=f;f=e;e=(d+t1)|0;d=c;c=bb;bb=a;a=(t1+t2)|0;
+      }
+      h[0]=(h[0]+a)|0;h[1]=(h[1]+bb)|0;h[2]=(h[2]+c)|0;h[3]=(h[3]+d)|0;h[4]=(h[4]+e)|0;h[5]=(h[5]+f)|0;h[6]=(h[6]+g)|0;h[7]=(h[7]+hh)|0;
+    }
+    var r='';for(i=0;i<8;i++){r+=('00000000'+(h[i]>>>0).toString(16)).slice(-8);}
+    return r;
+  }
+  window.__sha=sha256;
+  function openUp(){document.body.classList.remove('locked');var g=document.getElementById('gate');if(g)g.remove();}
+  try{ if(sessionStorage.getItem('hailAdminOk')===H){ document.addEventListener('DOMContentLoaded',openUp); return; } }catch(e){}
+  document.addEventListener('DOMContentLoaded',function(){
+    var f=document.getElementById('gateForm'),pw=document.getElementById('gatePw'),er=document.getElementById('gateErr');
+    pw.focus();
+    f.addEventListener('submit',function(ev){
+      ev.preventDefault();
+      if(sha256(pw.value)===H){ try{sessionStorage.setItem('hailAdminOk',H);}catch(e){} openUp(); }
+      else{ er.textContent='الرمز غير صحيح'; pw.value=''; pw.focus(); }
+    });
+  });
+})();
+</script>
+
+<header class="top"><div class="wrap bar">
+  <div><h1>إدارة مؤشرات جودة الحياة</h1><p>أحياء مدينة حائل — المؤشر العام يُحسب تلقائيًا من المؤشرات الفرعية</p></div>
+  <div class="acts"><span class="saved" id="saved"></span><a class="btn" href="index.html">الخريطة ›</a></div>
+</div></header>
+
+<main class="wrap">
+  <section class="cards" id="summary"></section>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="ind" class="on">المؤشرات والأوزان</button>
+    <button data-tab="data">إدخال المؤشرات</button>
+    <button data-tab="info">بيانات الأحياء والنواقص</button>
+    <button data-tab="chart">الرسم البياني</button>
+  </nav>
+
+  <!-- المؤشرات والأوزان -->
+  <section class="panel on" id="p-ind">
+    <div class="card">
+      <h2>المؤشرات الفرعية وأوزانها</h2>
+      <p class="sub">الأوزان المبدئية اقتراحية (نسبية، لا يلزم أن يكون مجموعها 100) وعدّلها بحسب أولوياتكم. لكل مؤشر نوع يحدد كيف تُحوَّل قيمته إلى درجة من 100، والأعلى درجة هو الأفضل دائمًا.</p>
+      <div class="formula">
+        <b>مؤشر (درجة/نسبة):</b> الدرجة = القيمة ÷ الحد الأعلى للمقياس × 100، وتُعكس إذا كان «الأقل أفضل».<br/>
+        <b>عدّاد (عدد بلاغات):</b> يتحول عدد بلاغات الحي إلى نسبة من أعلى حي: النسبة = العدد ÷ أعلى عدد بين الأحياء × 100، والدرجة = 100 − النسبة (الأقل بلاغات أفضل). فالحي الأكثر بلاغات يأخذ صفرًا، والحي بلا بلاغات يأخذ 100.<br/>
+        <b>بلاغات 940:</b> قبل التحويل تُحسب القيمة = (عدد بلاغات الحي ÷ إجمالي بلاغات كل الأحياء) ÷ مساحة الحي بالكم²، ثم تُضرب في 100 لتصير نسبة، والأقل أفضل. هذه الطريقة تنطبق على بلاغات 940 والحفر والأرصفة والإنارة. الإجمالي تدخله أنت لكل مؤشر، ومساحة الحي تدخلها في تبويب «بيانات الأحياء»؛ والحي الذي بلا مساحة لا يُحسب له المؤشر.<br/>
+        <b>المؤشر العام</b> = متوسط الدرجات مرجّحًا بالأوزان، ويُحسب من المؤشرات المُدخلة للحي فقط.
+      </div>
+      <div id="indList"></div>
+      <div class="row-actions">
+        <button class="btn pri" id="addInd" type="button">+ إضافة مؤشر</button>
+        <button class="btn" id="normW" type="button">توحيد الأوزان إلى 100</button>
+        <span class="total" id="wTotal"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>حدود الفئات</h2>
+      <p class="sub">تحدد على أساسها خانات التصنيف في الخريطة (متميز / محافظ / تحسين / أولوية عالية).</p>
+      <div class="th-grid" id="thGrid"></div>
+    </div>
+  </section>
+
+  <!-- إدخال البيانات -->
+  <section class="panel" id="p-data">
+    <div class="toolbar">
+      <input class="tq" id="tq" type="search" placeholder="ابحث عن حي…" autocomplete="off"/>
+      <span class="grow"></span>
+      <button class="btn pri" id="expJson" type="button">تصدير للنشر (JSON)</button>
+      <button class="btn" id="expCsv" type="button">تصدير CSV</button>
+      <label class="btn" for="impCsv">استيراد CSV</label><input id="impCsv" type="file" accept=".csv,text/csv"/>
+      <label class="btn" for="impJson">استيراد JSON</label><input id="impJson" type="file" accept=".json,application/json"/>
+      <button class="btn" id="demo" type="button">تعبئة تجريبية</button>
+      <button class="btn danger" id="clear" type="button">مسح القيم</button>
+    </div>
+    <div class="tablewrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    <p class="note">• بيانات الأحياء (المساحة والسكان والحدائق والرخص) لها تبويب مستقل. • الرقم الصغير تحت كل خانة هو درجة المؤشر من 100. • درجات مؤشرات العدّاد تُحسب كنسبة من أعلى حي، فتتغير إذا تغيّر أعلى عدد، وتستقر بعد اكتمال الإدخال.<br/>
+    يحفظ كل تعديل تلقائيًا في هذا المتصفح، والخريطة تقرأ منه مباشرة. لعرض الخريطة على جهاز آخر أو نشرها: صدّر ملف JSON وسمّه <b>qol-data.json</b> وضعه بجانب index.html.</p>
+  </section>
+
+  <!-- بيانات الأحياء والنواقص -->
+  <section class="panel" id="p-info">
+    <div class="card" style="margin-bottom:12px">
+      <h2>بيانات الأحياء والنواقص</h2>
+      <p class="sub">عبّئ هنا معلومات كل حي: المساحة وعدد السكان وعدد الحدائق وإجمالي مساحتها وعدد الرخص. تظهر في بطاقة الحي على الخريطة ولا تدخل في المؤشر العام، عدا <b>مساحة الحي</b> فتدخل في حساب بلاغات 940. الخانات الحمراء هي الناقصة، وكل ما تكتبه يُحفظ تلقائيًا.</p>
+    </div>
+    <div class="toolbar">
+      <input class="tq" id="tq2" type="search" placeholder="ابحث عن حي…" autocomplete="off"/>
+      <select class="sel" id="mf" style="min-width:190px" aria-label="تصفية النواقص"></select>
+    </div>
+    <div class="mfsum" id="mfsum"></div>
+    <div class="tablewrap"><table id="tbl2" style="min-width:760px"><thead></thead><tbody></tbody></table></div>
+    <div class="card" id="unm" hidden style="margin-top:16px"></div>
+  </section>
+
+  <!-- الرسم البياني -->
+  <section class="panel" id="p-chart">
+    <div class="toolbar"><select class="sel" id="cdist" aria-label="الحي"></select></div>
+    <div class="chart-grid">
+      <div class="card"><div id="cempty" class="empty" hidden></div><div id="cbox" style="position:relative"><canvas id="chart"></canvas></div></div>
+      <div class="card score-card" id="sc"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const DISTRICTS = [{"id":"19340371","ar":"أجا","en":"Aja"},{"id":"19340338","ar":"أركان","en":"Arkan"},{"id":"19340335","ar":"أعيرف","en":"Ueayrif"},{"id":"19340327","ar":"إشبيليا","en":"Ishbiliya"},{"id":"19340350","ar":"الأثير","en":"Al Athir"},{"id":"19340303","ar":"الأندلس","en":"Al Andalus"},{"id":"19340358","ar":"الأنوار","en":"Al Anwar"},{"id":"19340321","ar":"الإزدهار","en":"Al Izdihar"},{"id":"19340306","ar":"البازمين","en":""},{"id":"19340353","ar":"البحيرة","en":"Al Buhayrah"},{"id":"19340308","ar":"البزيعي","en":"Albazieaa"},{"id":"19340343","ar":"البوادي","en":"Al Bawadi"},{"id":"19340322","ar":"التعاون","en":"At Taawun"},{"id":"19340357","ar":"التلال","en":"Al Talal"},{"id":"19340329","ar":"الجامعة","en":"Al Jamiah"},{"id":"19340328","ar":"الجامعيين","en":"Al Jamiyin"},{"id":"19340301","ar":"الجبل","en":"Al Jabal"},{"id":"19340323","ar":"الجثامية","en":"Aljathamiuh"},{"id":"19340361","ar":"الخزامى","en":"Al Khuzama"},{"id":"19340331","ar":"الخليج","en":"Al Khalij"},{"id":"19340320","ar":"الخماشية","en":"Al Khamashiyah"},{"id":"19340304","ar":"الربوة","en":"Ar Rabwah"},{"id":"008004101","ar":"الرحاب","en":"Ar Rehab"},{"id":"19340345","ar":"الرصف","en":"Ar Rasf"},{"id":"008004092","ar":"الرعيلة","en":"AlWalraeiluh"},{"id":"008004099","ar":"الرمال","en":"Ar Rimal"},{"id":"19340292","ar":"الروابي","en":"Ar Rawabi"},{"id":"19340296","ar":"الريان","en":"Ar Rayaan"},{"id":"19340365","ar":"الزبارة","en":"Az Zibarah"},{"id":"19340362","ar":"الزهرة","en":"Az Zahrah"},{"id":"008004091","ar":"الزهور","en":"Al Zuhur"},{"id":"19340290","ar":"السحاب","en":"Al Sahab"},{"id":"19340348","ar":"السلام","en":"As Salam"},{"id":"19340364","ar":"السمراء","en":"As Samra"},{"id":"19340359","ar":"السويفلة","en":"Alsuwayfila"},{"id":"19340330","ar":"الشروق","en":"Ash Shrouk"},{"id":"19340344","ar":"الشفاء","en":"Ash Shifa"},{"id":"008018006","ar":"الصيهد","en":"As Saihad"},{"id":"19340370","ar":"العزيزية","en":"Al Aziziyah"},{"id":"19340311","ar":"العليا","en":"Al Olaya"},{"id":"19340305","ar":"الغدير","en":"Al Ghadir"},{"id":"19340288","ar":"الفجر","en":"Al-Fajr"},{"id":"008004002","ar":"الفروسية","en":"Al Frosyah"},{"id":"19340317","ar":"الفيحاء","en":"Al Fayha"},{"id":"19340314","ar":"القادسية","en":"Al Qadisiyah"},{"id":"19340313","ar":"القيروان","en":"Al Qirawan"},{"id":"008004082","ar":"الكوثر","en":"Al Kawthar"},{"id":"19340295","ar":"اللقيطة","en":"Allaqituh"},{"id":"19340318","ar":"المجد","en":"Al Majd"},{"id":"19340287","ar":"المحطة","en":"Al Mahattah"},{"id":"19340352","ar":"المدائن","en":"Al Madayin"},{"id":"19340363","ar":"المدينة الصناعية","en":"Industrial City"},{"id":"19340315","ar":"المروج","en":"Al Muruj"},{"id":"19340369","ar":"المزعبر","en":"Al Muzaabar"},{"id":"19340347","ar":"المصيف","en":"Al Masif"},{"id":"19340354","ar":"المطار","en":"Al Matar"},{"id":"008004109","ar":"المغواه","en":"Almaghwah"},{"id":"19340334","ar":"الملك عبدالله","en":"King Abdullah"},{"id":"19340319","ar":"المملكة","en":"The Kingdom"},{"id":"008004105","ar":"المنار","en":"Al Manar"},{"id":"19340337","ar":"النخيل","en":"Al Nakhil"},{"id":"19340316","ar":"النرجس","en":"An Narjis"},{"id":"19340302","ar":"النعام","en":"Al Naeam"},{"id":"19340324","ar":"النفل","en":"An Nafl"},{"id":"19340351","ar":"النقرة","en":"An Naqrah"},{"id":"19340340","ar":"النيصية","en":"Alnaysih"},{"id":"19340346","ar":"الوادي","en":"Al Wadi"},{"id":"19340332","ar":"الودي","en":"Alwudi"},{"id":"19340342","ar":"الورود","en":"Al Wurud"},{"id":"19340356","ar":"الوسيطا","en":"Alwasita"},{"id":"008004083","ar":"الوفاء","en":"Al Wafa"},{"id":"19340310","ar":"الياسمين","en":"Al Yasmin"},{"id":"19340336","ar":"اليمامة","en":"Al Yamamah"},{"id":"008004078","ar":"بدائع مريفق","en":"Badayie Muryfiq"},{"id":"19340368","ar":"برزان","en":"Barzan"},{"id":"19340300","ar":"جوهرة الوسيطا","en":"Jawharah Alwasita"},{"id":"19340297","ar":"حدري البلاد","en":"Hadri Al Bilad"},{"id":"19340289","ar":"حطين","en":"Hittin"},{"id":"008004077","ar":"درة الودي","en":"Dora alwudi"},{"id":"durrat-mashar","ar":"درة مشار","en":"Dora Machar"},{"id":"19340312","ar":"سفانة","en":"Safanah"},{"id":"19340367","ar":"سماح","en":"Samah"},{"id":"19340293","ar":"شراف","en":"Sharaf"},{"id":"19340355","ar":"صبابة","en":"Sababah"},{"id":"19340286","ar":"صديان","en":"Sadyan"},{"id":"19340341","ar":"صلاح الدين","en":"Salahuddin"},{"id":"19340325","ar":"صناعية التقدم","en":"Sinaiyah Altaqadum"},{"id":"19340298","ar":"صناعية النهضة","en":"Sinaiyah An Nahdah"},{"id":"19340294","ar":"ضاحية الملك فهد","en":"Dahiyat Al Malik Fahd"},{"id":"008004080","ar":"عانقة","en":"Eaniqa"},{"id":"008004072","ar":"عقده","en":"Eaqadah"},{"id":"19340299","ar":"غرناطة","en":"Ghirnatah"},{"id":"19340309","ar":"غياض","en":"Gheyad"},{"id":"19340307","ar":"قرطبة","en":"Qurtubah"},{"id":"008004089","ar":"قصر العشروات","en":"Qasr Aleshrwat"},{"id":"19340339","ar":"قفار","en":"Qfaar"},{"id":"19340333","ar":"لؤلؤة قفار","en":"Luluah qafar"},{"id":"19340291","ar":"لؤلؤه الخزامى","en":"Luluah Al Khuzama"},{"id":"19340366","ar":"لبده","en":"Labdah"},{"id":"008004034","ar":"مريفق","en":"Murifiq"},{"id":"19340326","ar":"مشار","en":"Mashar"},{"id":"19340349","ar":"مطار حائل","en":"Hail Airport"},{"id":"19340360","ar":"مغيضه","en":"Mughidih"},{"id":"008004026","ar":"نقبين","en":"Naqbin"}];
+const DMAP={}; DISTRICTS.forEach(d=>DMAP[d.id]=d);
+const KEY='hailQol.v2';
+const DEFAULT_INDICATORS=[ /* method:'ratio' افتراضي لكل العدّادات */
+  {key:'visual',    name:'مؤشر التشوه البصري',                         weight:20, kind:'index', better:'low',  max:100, unit:'درجة'},
+  {key:'r940',      name:'عدد بلاغات 940',                             weight:15, kind:'count', better:'low', formula:'shareXarea', method:'fixed', max:5, unit:'بلاغ'},
+  {key:'potholes',  name:'عدد بلاغات الحفر',                           weight:15, kind:'count', better:'low', formula:'shareXarea', method:'fixed', max:5, unit:'بلاغ'},
+  {key:'sidewalks', name:'عدد بلاغات الأرصفة',                         weight:15, kind:'count', better:'low', formula:'shareXarea', method:'fixed', max:5, unit:'بلاغ'},
+  {key:'lighting',  name:'عدد بلاغات الإنارة',                         weight:15, kind:'count', better:'low', formula:'shareXarea', method:'fixed', max:5, unit:'بلاغ'}
+];
+const DEFAULT_INFO=[
+  {key:'area',      name:'مساحة الحي',               unit:'كم²'},
+  {key:'population',name:'عدد السكان',               unit:'نسمة'},
+  {key:'parks',     name:'عدد الحدائق',              unit:''},
+  {key:'licenses',  name:'عدد الرخص',                unit:'رخصة'}
+];
+/* بيانات مأخوذة من ملف الإكسل (تُطبَّق مرة واحدة على الخانات الفارغة فقط) */
+const SEED_INFO={"19340370":{"population":42880,"parks":5,"licenses":962},"19340346":{"population":23147,"parks":2,"licenses":310},"19340356":{"population":22080,"parks":5,"licenses":96},"19340287":{"population":20261},"19340361":{"population":17865,"parks":3,"licenses":245},"19340344":{"population":16062,"parks":2,"licenses":598},"19340364":{"population":15800,"parks":2,"licenses":313},"19340347":{"population":14700,"parks":1,"licenses":221},"19340365":{"population":13968,"parks":7,"licenses":294},"19340354":{"population":13627,"parks":9,"licenses":566},"19340371":{"population":13258,"parks":15,"licenses":260},"19340320":{"population":10872,"parks":1,"licenses":85},"19340328":{"population":10064,"parks":19,"licenses":479},"19340345":{"population":9452,"parks":5,"licenses":324},"19340355":{"population":8567,"parks":12,"licenses":153},"19340297":{"population":7002,"licenses":10},"19340310":{"population":6553,"parks":1,"licenses":115},"19340362":{"population":5778,"parks":9,"licenses":171},"19340352":{"population":4136,"parks":4,"licenses":195},"19340369":{"population":3289,"parks":2,"licenses":156},"19340326":{"population":2365,"parks":7,"licenses":21},"19340294":{"population":1848,"licenses":17},"19340353":{"population":1814,"parks":3,"licenses":90},"19340359":{"population":1652,"licenses":16},"19340360":{"population":1588,"licenses":67},"19340368":{"population":1579,"licenses":1055},"19340339":{"population":1502,"parks":5,"licenses":52},"19340329":{"population":1162,"licenses":4},"19340351":{"population":44704,"parks":23,"licenses":1256},"19340324":{"population":10304,"parks":1,"licenses":114}};
+const SEED_UNMATCHED=[{"name":"المنتزه الشرقي","population":21535,"parks":null,"licenses":null,"area":6.333},{"name":"نقرة قفار","population":17762,"parks":5,"licenses":null,"area":19.035},{"name":"المنتزه الغربي","population":14210,"parks":null,"licenses":null,"area":4.914},{"name":"لبدة وسماح","population":12323,"parks":3,"licenses":266,"area":null},{"name":"المنطقة الصناعية","population":6938,"parks":1,"licenses":5,"area":21.746},{"name":"كورنيش حائل","population":5870,"parks":null,"licenses":null,"area":null},{"name":"ضاحية الودي","population":5730,"parks":null,"licenses":null,"area":null},{"name":"ج 16","population":4203,"parks":null,"licenses":null,"area":null},{"name":"شرق السويفلة","population":3255,"parks":null,"licenses":null,"area":null},{"name":"الخريمي","population":2885,"parks":null,"licenses":null,"area":29.339},{"name":"ج 8","population":2307,"parks":null,"licenses":null,"area":null},{"name":"ج 2","population":1179,"parks":null,"licenses":null,"area":23.482},{"name":"ج 9","population":717,"parks":null,"licenses":null,"area":null},{"name":"ج 11","population":616,"parks":null,"licenses":null,"area":null},{"name":"ج 4","population":512,"parks":null,"licenses":null,"area":null},{"name":"ج 14","population":116,"parks":null,"licenses":null,"area":null},{"name":"المدينة الاقتصادية","population":115,"parks":null,"licenses":null,"area":null},{"name":"ج 7","population":97,"parks":null,"licenses":null,"area":null},{"name":"ج 3","population":51,"parks":null,"licenses":null,"area":null},{"name":"ج 15","population":35,"parks":null,"licenses":null,"area":null},{"name":"ضاحية مريفق","population":30,"parks":null,"licenses":null,"area":null},{"name":"المنطقة الصناعية 2","population":24,"parks":null,"licenses":5,"area":null},{"name":"ج 1","population":17,"parks":null,"licenses":null,"area":null},{"name":"ج 10","population":16,"parks":null,"licenses":null,"area":null},{"name":"ضاحية نقبين","population":15,"parks":null,"licenses":4,"area":null},{"name":"ج 12","population":15,"parks":null,"licenses":null,"area":null},{"name":"الطريفي","population":null,"parks":null,"licenses":null,"area":0.239},{"name":"صلاح الدين الشرقي","population":null,"parks":null,"licenses":null,"area":0.743},{"name":"البادية","population":null,"parks":null,"licenses":null,"area":2.136},{"name":"السويفلة (1) — ملف المساحات","population":null,"parks":null,"licenses":null,"area":13.891},{"name":"مطار حائل الدولي","population":null,"parks":null,"licenses":null,"area":15.546},{"name":"البدنة","population":null,"parks":null,"licenses":null,"area":15.598},{"name":"السويفلة (2) — ملف المساحات","population":null,"parks":null,"licenses":null,"area":49.893}];
+const SEED_NOTES=["النقرة: دُمج «النقرة 1» و«النقرة 2». السكان مجموعهما (33,147 + 11,557)، والحدائق (23) والرخص (1,256) من الجزء 1 فقط لأن الجزء 2 بلا بيانات فيهما.","النفل: دُمج «النفل1» و«النفل 2». السكان مجموعهما (10,144 + 160)، أما الحدائق (1) والرخص (114) فالقيمة نفسها مكررة في الجزأين فأخذتها مرة واحدة، تحقق منها.","ملف المساحات: «السويفلة» تكررت فيه بقيمتين مختلفتين (13.891 و49.893 كم²) فلم أعتمد أيًا منهما، اختر الحي المناسب لكل واحدة من البطاقة. وكذلك «مطار حائل الدولي» و«صلاح الدين الشرقي» لم أنسبهما تلقائيًا لاحتمال أنهما جزء من حي آخر."];
+const SEED_AREA={"19340368":0.435,"19340367":0.605,"19340366":1.146,"19340360":1.151,"19340369":1.428,"19340287":1.823,"19340342":1.967,"19340295":1.986,"19340353":2.334,"19340370":2.663,"19340362":2.679,"19340355":2.786,"19340365":3.086,"19340352":3.789,"19340345":4.174,"19340294":4.44,"19340354":4.579,"19340371":4.845,"19340320":5.19,"19340356":5.255,"19340364":5.483,"19340346":8.075,"19340344":8.121,"19340361":8.13,"19340347":12.048,"19340351":12.378,"19340297":23.117,"19340340":24.834,"19340339":32.17};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=x=>(x==null||x===''||isNaN(x))?null:Number(x);
+const r1=x=>Math.round(x*10)/10;
+function nk(s){
+  s=String(s||'').replace(/[ً-ْـ]/g,'').replace('حي ','');
+  [['أ','ا'],['إ','ا'],['آ','ا'],['ة','ه'],['ى','ي']].forEach(([a,b])=>s=s.split(a).join(b));
+  s=s.replace(/\s+/g,'');
+  return s.startsWith('ال')&&s.length>4?s.slice(2):s;
+}
+function normInd(i){
+  const kind=i.kind==='count'?'count':'index';
+  return {key:String(i.key),name:String(i.name),weight:Math.max(0,Number(i.weight)||0),kind,
+    better:i.better==='low'?'low':'high',
+    method:i.method==='minmax'?'minmax':(i.method==='ratio'?'ratio':(kind==='count'?'fixed':'ratio')),
+    formula:i.formula==='shareXarea'?'shareXarea':(i.formula==null&&['r940','potholes','sidewalks','lighting'].includes(String(i.key))?'shareXarea':'raw'),
+    max:Number(i.max)>0?Number(i.max):100,
+    total:Number(i.total)>0?Number(i.total):null,
+    unit:i.unit==null?'':String(i.unit)};
+}
+function normState(d){
+  d=d||{};
+  if(Array.isArray(d.indicators)) d={...d,indicators:d.indicators.filter(i=>i.key!=='access800')};
+  if(d.values) Object.values(d.values).forEach(v=>{ if(v) delete v.access800; });
+  if(d.info){ if(Array.isArray(d.info.fields)) d={...d,info:{...d.info,fields:d.info.fields.filter(f=>f.key!=='parkArea')}}; if(d.info.values) Object.values(d.info.values).forEach(v=>{ if(v) delete v.parkArea; }); }
+  if(Array.isArray(d.indicators)&&d.mv!==2) d={...d,indicators:d.indicators.map(i=>['r940','potholes','sidewalks','lighting'].includes(i.key)&&i.kind==='count'?{...i,formula:'shareXarea',method:'fixed',max:5}:i)};
+  const rt=(d.settings&&Array.isArray(d.settings.thresholds))?d.settings.thresholds.map(Number):[];
+  const th=rt.length===2?rt:(rt.length===3?[rt[1],rt[2]]:[75,60]);
+  return {
+    indicators:Array.isArray(d.indicators)?d.indicators.map(normInd):DEFAULT_INDICATORS.map(normInd),
+    values:(d.values&&typeof d.values==='object')?d.values:{},
+    info:{fields:DEFAULT_INFO.map(x=>({...x})),values:(d.info&&d.info.values&&typeof d.info.values==='object')?d.info.values:{}},
+    settings:{thresholds:th},
+    mv:2,
+    seedV:Number(d.seedV)||0,
+    applied:Array.isArray(d.applied)?d.applied.map(Number):[]
+  };
+}
+function applySeed(st){
+  const fill=(id,k,v)=>{ if(!DMAP[id]) return; const cur=st.info.values[id]||(st.info.values[id]={}); if(cur[k]==null||cur[k]==='') cur[k]=v; };
+  if(st.seedV<1) Object.keys(SEED_INFO).forEach(id=>Object.entries(SEED_INFO[id]).forEach(([k,v])=>fill(id,k,v)));
+  if(st.seedV<2) Object.entries(SEED_AREA).forEach(([id,v])=>fill(id,'area',v));
+  st.seedV=2; return st;
+}
+function loadState(){
+  try{ const raw=localStorage.getItem(KEY); if(raw) return applySeed(normState(JSON.parse(raw))); }catch(e){}
+  return applySeed(normState({}));
+}
+let state=loadState();
+let comp={};
+
+/* ---------- الحساب ---------- */
+function rawVal(id,i){ return num((state.values[id]||{})[i.key]); }
+let TOT={};
+function metric(id,i){
+  const x=rawVal(id,i); if(x==null) return null;
+  if(i.kind==='count'&&i.formula==='shareXarea'){
+    const t=TOT[i.key], a=num(((state.info.values[id])||{}).area);
+    if(!(a>0)) return null;
+    return t>0?x/t/a:null;
+  }
+  return x;
+}
+function computeAll(){
+  const out={}, ids=DISTRICTS.map(d=>d.id), stats={};
+  TOT={};
+  state.indicators.forEach(i=>{ if(i.kind==='count'&&i.formula==='shareXarea') TOT[i.key]=Number(i.total)>0?Number(i.total):0; });
+  state.indicators.forEach(i=>{
+    if(i.kind!=='count') return;
+    const xs=ids.map(id=>metric(id,i)).filter(x=>x!=null);
+    if(xs.length) stats[i.key]={min:Math.min(...xs),max:Math.max(...xs)};
+  });
+  ids.forEach(id=>{
+    const scores={},pct={}; let s=0,w=0;
+    state.indicators.forEach(i=>{
+      const m=metric(id,i); if(m==null) return;
+      let sc;
+      if(i.kind==='count'){
+        const st=stats[i.key];
+        if(i.method==='fixed'){ const p=Math.min(1,Math.max(0,m))*100; sc=i.better==='low'?100-p:p; }
+        else if(i.method==='minmax') sc=st.max===st.min?100:100*(i.better==='low'?(st.max-m):(m-st.min))/(st.max-st.min);
+        else { const p=st.max>0?m/st.max*100:0; sc=i.better==='low'?100-p:p; }
+      } else {
+        const p=Math.min(1,Math.max(0,m/i.max))*100;
+        sc=i.better==='low'?100-p:p;
+      }
+      if(i.kind==='count'&&i.method==='fixed') pct[i.key]=r1(m*100);
+      sc=r1(sc); scores[i.key]=sc; s+=i.weight*sc; w+=i.weight;
+    });
+    if(w>0) out[id]={overall:r1(s/w),scores,pct};
+  });
+  return out;
+}
+function recompute(){ comp=computeAll(); state.computed=comp; }
+function overall(id){ return comp[id]?comp[id].overall:null; }
+function tiers(){
+  const t=state.settings.thresholds;
+  return [
+    {key:'good',label:'مستوى جيد',min:t[0],color:'#2e7d4f'},
+    {key:'mid',label:'يحتاج تحسينًا',min:t[1],color:'#e0a82e'},
+    {key:'high',label:'أولوية عالية',min:0,color:'#c0392b'}
+  ];
+}
+function tierOf(score){ const T=tiers(); return T.find(t=>score>=t.min)||T[2]; }
+
+let saveT=null;
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    try{
+      recompute();
+      localStorage.setItem(KEY,JSON.stringify(state));
+      $('#saved').textContent='حُفظ تلقائيًا · '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    } catch(e){ $('#saved').textContent='تعذّر الحفظ في هذا المتصفح — صدّر الملف يدويًا'; }
+  },250);
+}
+
+/* ---------- الملخص ---------- */
+function renderSummary(){
+  const scores=DISTRICTS.map(d=>overall(d.id)).filter(x=>x!=null);
+  const avg=scores.length?r1(scores.reduce((a,b)=>a+b,0)/scores.length):'—';
+  const counts={}; tiers().forEach(t=>counts[t.key]=0);
+  scores.forEach(s=>counts[tierOf(s).key]++);
+  let h=`<div class="stat"><b>${scores.length}<small> / ${DISTRICTS.length}</small></b><span>أحياء لها بيانات</span></div>
+         <div class="stat"><b>${avg}</b><span>متوسط جودة الحياة</span></div>`;
+  tiers().forEach(t=>{ h+=`<div class="stat" style="--c:${t.color}"><b>${counts[t.key]}</b><span>${t.label}</span></div>`; });
+  $('#summary').innerHTML=h;
+  renderMFSum();
+}
+
+/* ---------- المؤشرات ---------- */
+function totalW(){ return state.indicators.reduce((a,i)=>a+i.weight,0); }
+function renderInd(){
+  const tw=totalW();
+  $('#indList').innerHTML=state.indicators.map((i,ix)=>`
+    <div class="irow" data-ix="${ix}">
+      <span class="n">${ix+1}</span>
+      <input type="text" class="iname" value="${esc(i.name)}" aria-label="اسم المؤشر"/>
+      <label class="w"><input type="number" class="iw" min="0" step="any" value="${i.weight}" aria-label="الوزن"/><em>الوزن</em></label>
+      <span class="pct">${tw?r1(i.weight/tw*100):0}%</span>
+      <button class="icon del" type="button" title="حذف المؤشر" aria-label="حذف">×</button>
+      <div class="opts">
+        <label>النوع
+          <select class="ik"><option value="index"${i.kind==='index'?' selected':''}>مؤشر (درجة أو نسبة)</option><option value="count"${i.kind==='count'?' selected':''}>عدّاد (عدد بلاغات)</option></select>
+        </label>
+        <label>الأفضل
+          <select class="ib"><option value="high"${i.better==='high'?' selected':''}>الأعلى أفضل</option><option value="low"${i.better==='low'?' selected':''}>الأقل أفضل</option></select>
+        </label>
+        <label>الحساب قبل التحويل
+          <select class="if"${i.kind==='count'?'':' disabled'}><option value="raw"${i.formula==='raw'?' selected':''}>عدد البلاغات مباشرة</option><option value="shareXarea"${i.formula==='shareXarea'?' selected':''}>العدد ÷ الإجمالي ÷ مساحة الحي</option></select>
+        </label>
+        <label>طريقة التحويل
+          <select class="im"${i.kind==='count'?'':' disabled'}><option value="fixed"${i.method==='fixed'?' selected':''}>النسبة = الناتج × ١٠٠ (الأقل أفضل)</option><option value="ratio"${i.method==='ratio'?' selected':''}>نسبة من أعلى حي</option><option value="minmax"${i.method==='minmax'?' selected':''}>مقارنة بين الأقل والأعلى</option></select>
+        </label>
+        <label>الحد الأعلى للمقياس <input type="number" class="imx" min="1" step="any" value="${i.max}"${i.kind==='count'?' disabled':''}/></label>
+        <label>إجمالي البلاغات (كل الأحياء) <input type="number" class="itot" min="1" step="any" value="${i.total==null?'':i.total}" placeholder="أدخله يدويًا"${(i.kind==='count'&&i.formula==='shareXarea')?'':' disabled'}/></label>
+        <label>الوحدة <input type="text" class="iu" value="${esc(i.unit)}" placeholder="مثل: بلاغ، %"/></label>
+      </div>
+    </div>`).join('') || '<div class="empty">لا توجد مؤشرات. أضف مؤشرًا للبدء.</div>';
+  updTotal();
+}
+function updTotal(){
+  const tw=totalW();
+  $('#wTotal').textContent='مجموع الأوزان: '+r1(tw);
+  document.querySelectorAll('#indList .irow').forEach(row=>{
+    const i=state.indicators[+row.dataset.ix]; if(!i) return;
+    row.querySelector('.pct').textContent=(tw?r1(i.weight/tw*100):0)+'%';
+  });
+}
+let reT=null;
+function refreshLater(){ clearTimeout(reT); reT=setTimeout(()=>{ recompute(); renderSummary(); renderTable(); renderChartSelect(); renderChart(); },250); }
+$('#indList').addEventListener('input',e=>{
+  const row=e.target.closest('.irow'); if(!row) return;
+  const i=state.indicators[+row.dataset.ix], t=e.target;
+  if(t.classList.contains('iname')) i.name=t.value;
+  else if(t.classList.contains('iw')) i.weight=Math.max(0,Number(t.value)||0);
+  else if(t.classList.contains('iu')) i.unit=t.value;
+  else if(t.classList.contains('imx')) i.max=Number(t.value)>0?Number(t.value):(i.kind==='count'?5:100);
+  else return;
+  updTotal(); recompute(); save(); refreshLater();
+});
+$('#indList').addEventListener('change',e=>{
+  const row=e.target.closest('.irow'); if(!row) return;
+  const i=state.indicators[+row.dataset.ix], t=e.target;
+  if(t.classList.contains('ik')){ i.kind=t.value; if(i.kind==='count') i.better='low'; }
+  else if(t.classList.contains('ib')) i.better=t.value;
+  else if(t.classList.contains('im')) i.method=t.value;
+  else if(t.classList.contains('if')) i.formula=t.value;
+  else if(t.classList.contains('itot')) i.total=Number(t.value)>0?Number(t.value):null;
+  else return;
+  recompute(); save(); renderInd(); refreshAll();
+});
+$('#indList').addEventListener('click',e=>{
+  if(!e.target.classList.contains('del')) return;
+  const ix=+e.target.closest('.irow').dataset.ix, i=state.indicators[ix];
+  if(!confirm('حذف المؤشر «'+i.name+'» وكل قيمه المُدخلة؟')) return;
+  state.indicators.splice(ix,1);
+  Object.values(state.values).forEach(v=>{ delete v[i.key]; });
+  save(); renderInd(); refreshAll();
+});
+$('#addInd').addEventListener('click',()=>{
+  state.indicators.push(normInd({key:'i'+Date.now().toString(36),name:'مؤشر جديد',weight:10,kind:'index',better:'high',max:100,unit:'درجة'}));
+  save(); renderInd(); refreshAll();
+  const names=document.querySelectorAll('#indList .iname'); const el=names[names.length-1]; if(el){ el.focus(); el.select(); }
+});
+$('#normW').addEventListener('click',()=>{
+  const tw=totalW(); if(!tw) return;
+  state.indicators.forEach(i=>i.weight=r1(i.weight/tw*100));
+  save(); renderInd(); refreshAll();
+});
+function renderThresholds(){
+  const T=tiers(); const t=state.settings.thresholds;
+  const items=[
+    {i:0,label:T[0].label,color:T[0].color,hint:'الدرجة ≥ هذا الرقم'},
+    {i:1,label:T[1].label,color:T[1].color,hint:'من هذا الرقم حتى حد المستوى الجيد'}
+  ];
+  $('#thGrid').innerHTML=items.map(x=>`<div class="th-item" style="--c:${x.color}"><label>${x.label}</label><input type="number" min="1" max="100" step="any" data-i="${x.i}" value="${t[x.i]}"/><small>${x.hint}</small></div>`).join('')+
+    `<div class="th-item" style="--c:${T[2].color}"><label>${T[2].label}</label><input value="أقل من ${t[1]}" disabled/><small>يتحدد تلقائيًا</small></div>`;
+}
+$('#thGrid').addEventListener('change',e=>{
+  if(e.target.dataset.i==null) return;
+  const t=state.settings.thresholds.slice(); t[+e.target.dataset.i]=Number(e.target.value);
+  if(!(t[0]>t[1]&&t[1]>0&&t[0]<=100)){ alert('يجب أن يكون حد المستوى الجيد أكبر من حد «يحتاج تحسينًا»، وكلاهما بين 1 و100.'); renderThresholds(); return; }
+  state.settings.thresholds=t; save(); renderThresholds(); refreshAll();
+});
+
+/* ---------- النواقص وبيانات الملف غير المطابقة ---------- */
+function missingOf(id){ const iv=state.info.values[id]||{}; return state.info.fields.filter(f=>iv[f.key]==null||iv[f.key]===''); }
+function renderMFOptions(){
+  const sel=$('#mf'), cur=sel.value;
+  sel.innerHTML='<option value="">كل الأحياء</option><option value="any">ناقصة أي معلومة</option>'+state.info.fields.map(f=>`<option value="${esc(f.key)}">ناقص: ${esc(f.name)}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+function renderMFSum(){
+  const el=$('#mfsum'); if(!el) return;
+  const per=state.info.fields.map(f=>({f,n:DISTRICTS.filter(d=>missingOf(d.id).some(x=>x.key===f.key)).length}));
+  const inc=DISTRICTS.filter(d=>missingOf(d.id).length).length;
+  el.innerHTML='<b>'+inc+'</b> حيًا من '+DISTRICTS.length+' ناقصة بياناته. الناقص حسب المعلومة: '+per.map(x=>esc(x.f.name)+' <b>'+x.n+'</b>').join(' · ');
+}
+function renderUnm(){
+  const box=$('#unm'); if(!box) return;
+  if(!SEED_UNMATCHED.length){ box.hidden=true; return; }
+  const left=SEED_UNMATCHED.map((r,ix)=>({r,ix})).filter(x=>!state.applied.includes(x.ix));
+  box.hidden=false;
+  const opts='<option value="">اختر الحي…</option>'+DISTRICTS.map(d=>`<option value="${esc(d.id)}">${esc(d.ar)}</option>`).join('');
+  const f=v=>v==null?'—':Number(v).toLocaleString('en-US');
+  box.innerHTML=`<h2>بيانات من ملف الإكسل لم تُطابق أي حي (${left.length} من ${SEED_UNMATCHED.length})</h2>
+    <p class="sub">أسماؤها غير موجودة في أحياء الخريطة (أجزاء مرقمة أو أحياء مدموجة أو مسميات غير رسمية). اختر الحي المناسب لكل صف واضغط «تطبيق» لنقل قيمه إليه، أو اتركه.</p>
+    ${SEED_NOTES.length?'<ul class="notes">'+SEED_NOTES.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>':''}
+    ${left.length?`<div class="tablewrap" style="max-height:50vh"><table style="min-width:780px"><thead><tr><th class="nm2h">الاسم في الملف</th><th>السكان</th><th>الحدائق</th><th>الرخص</th><th>المساحة (كم²)</th><th>الحي في الخريطة</th><th></th></tr></thead><tbody>
+    ${left.map(({r,ix})=>`<tr data-ux="${ix}"><td class="nm2">${esc(r.name)}</td><td>${f(r.population)}</td><td>${f(r.parks)}</td><td>${f(r.licenses)}</td><td>${f(r.area)}</td><td><select class="sel usel" style="min-width:170px">${opts}</select></td><td><button class="btn uapply" type="button">تطبيق</button></td></tr>`).join('')}
+    </tbody></table></div>`:'<div class="empty">تمت معالجة كل الصفوف.</div>'}`;
+}
+$('#unm').addEventListener('click',e=>{
+  const b=e.target.closest('.uapply'); if(!b) return;
+  const tr=b.closest('tr'), ix=+tr.dataset.ux, id=tr.querySelector('.usel').value, r=SEED_UNMATCHED[ix];
+  if(!id){ alert('اختر الحي أولًا.'); return; }
+  const cur=state.info.values[id]||{};
+  const conflicts=['population','parks','licenses','area'].filter(k=>r[k]!=null&&cur[k]!=null&&cur[k]!==''&&cur[k]!==r[k]);
+  if(conflicts.length&&!confirm('الحي «'+DMAP[id].ar+'» عنده قيم مُدخلة مختلفة لبعض هذه المعلومات. استبدالها بقيم هذا الصف؟')) return;
+  const iv=(state.info.values[id]=state.info.values[id]||{});
+  ['population','parks','licenses','area'].forEach(k=>{ if(r[k]!=null) iv[k]=r[k]; });
+  state.applied.push(ix);
+  recompute(); save(); renderTable(); refreshAll();
+});
+$('#mf').addEventListener('change',renderInfoTable);
+
+/* ---------- جدول البيانات ---------- */
+function indHint(i){
+  if(i.kind==='count') return (i.unit||'عدد')+(i.formula==='shareXarea'?' · ÷ الإجمالي ÷ مساحة الحي (تُدخل في تبويب بيانات الأحياء)':'')+' · '+(i.better==='low'?'الأقل أفضل':'الأعلى أفضل');
+  return (i.unit||'')+' من '+i.max+' · '+(i.better==='low'?'الأقل أفضل':'الأعلى أفضل');
+}
+function renderTable(){
+  const raw=$('#tq').value.trim(), f=nk(raw);
+  $('#tbl thead').innerHTML='<tr><th class="nm">الحي</th>'+
+    state.indicators.map(i=>`<th>${esc(i.name)}<small>${esc(indHint(i))}</small></th>`).join('')+'<th>المؤشر العام</th><th>الفئة</th></tr>';
+  const rows=DISTRICTS.filter(d=>!f||nk(d.ar).includes(f)||String(d.en||'').toLowerCase().includes(raw.toLowerCase()));
+  $('#tbl tbody').innerHTML=rows.map(d=>{
+    const v=state.values[d.id]||{};
+    return `<tr data-id="${esc(d.id)}"><td class="nm">${esc(d.ar)}</td>`+
+      state.indicators.map(i=>`<td data-k="${esc(i.key)}"><input type="number" min="0"${i.kind==='index'?' max="'+i.max+'"':''} step="any" data-k="${esc(i.key)}" value="${v[i.key]!=null&&v[i.key]!==''?esc(v[i.key]):''}" aria-label="${esc(i.name)} — ${esc(d.ar)}"/><small class="sc"></small></td>`).join('')+
+      `<td class="ov"></td><td class="tg"></td></tr>`;
+  }).join('') || `<tr><td colspan="${state.indicators.length+3}" class="empty">لا نتائج</td></tr>`;
+  updAll();
+}
+function updRow(tr){
+  const id=tr.dataset.id, c=comp[id], ov=tr.querySelector('.ov'), tg=tr.querySelector('.tg');
+  tr.querySelectorAll('td[data-k]').forEach(td=>{
+    const sc=c&&c.scores[td.dataset.k]; td.querySelector('.sc').textContent=sc!=null?sc:'';
+  });
+  if(!c){ ov.textContent='—'; ov.style.color=''; tg.innerHTML=''; return; }
+  const t=tierOf(c.overall); ov.textContent=c.overall; ov.style.color=t.color;
+  tg.innerHTML=`<span class="tag" style="--c:${t.color}"><i></i>${t.label}</span>`;
+}
+function updAll(){ document.querySelectorAll('#tbl tbody tr[data-id]').forEach(updRow); }
+$('#tbl tbody').addEventListener('input',e=>{
+  const tr=e.target.closest('tr[data-id]'); if(!tr) return;
+  const id=tr.dataset.id; let val=e.target.value;
+  if(e.target.dataset.k){
+    const k=e.target.dataset.k, ind=state.indicators.find(x=>x.key===k);
+    if(val!==''){
+      let n=Number(val); if(isNaN(n)) return;
+      if(n<0){ n=0; e.target.value='0'; }
+      if(ind.kind==='index'&&n>ind.max){ n=ind.max; e.target.value=String(n); }
+      val=n;
+    }
+    if(!state.values[id]) state.values[id]={};
+    if(val==='') delete state.values[id][k]; else state.values[id][k]=Number(val);
+    if(!Object.keys(state.values[id]).length) delete state.values[id];
+  } else return;
+  recompute(); save(); updAll(); renderSummary(); renderChart();
+});
+
+/* ---------- جدول بيانات الأحياء (تبويب مستقل) ---------- */
+function renderInfoTable(){
+  const raw=$('#tq2').value.trim(), f=nk(raw), mf=$('#mf').value;
+  $('#tbl2 thead').innerHTML='<tr><th class="nm">الحي</th>'+state.info.fields.map(x=>`<th>${esc(x.name)}<small>${esc(x.unit||'عدد')}${x.key==='area'?' · يدخل في حساب 940':''}</small></th>`).join('')+'<th>ما ينقص</th></tr>';
+  const rows=DISTRICTS.filter(d=>!f||nk(d.ar).includes(f)||String(d.en||'').toLowerCase().includes(raw.toLowerCase()))
+    .filter(d=>{ if(!mf) return true; const ms=missingOf(d.id); return mf==='any'?ms.length>0:ms.some(x=>x.key===mf); });
+  $('#tbl2 tbody').innerHTML=rows.map(d=>{
+    const iv=state.info.values[d.id]||{};
+    return `<tr data-id="${esc(d.id)}"><td class="nm">${esc(d.ar)}</td>`+
+      state.info.fields.map(x=>{ const v=iv[x.key]; return `<td class="infoc"><input type="number" min="0" step="any" data-f="${esc(x.key)}" value="${v!=null?esc(v):''}" aria-label="${esc(x.name)} — ${esc(d.ar)}"/></td>`; }).join('')+`<td class="mc"></td></tr>`;
+  }).join('') || `<tr><td colspan="${state.info.fields.length+2}" class="empty">لا نتائج</td></tr>`;
+  document.querySelectorAll('#tbl2 tbody tr[data-id]').forEach(updInfoRow);
+}
+function updInfoRow(tr){
+  const ms=missingOf(tr.dataset.id), mc=tr.querySelector('.mc');
+  mc.innerHTML=ms.length?ms.map(f=>`<span class="miss">${esc(f.name)}</span>`).join(''):'<span class="okc">مكتمل</span>';
+  tr.querySelectorAll('input[data-f]').forEach(inp=>inp.classList.toggle('emp',inp.value===''));
+}
+$('#tbl2 tbody').addEventListener('input',e=>{
+  const tr=e.target.closest('tr[data-id]'), f=e.target.dataset.f; if(!tr||!f) return;
+  const id=tr.dataset.id, val=e.target.value, iv=state.info.values;
+  if(!iv[id]) iv[id]={};
+  if(val===''||isNaN(val)||Number(val)<0) delete iv[id][f]; else iv[id][f]=Number(val);
+  if(!Object.keys(iv[id]).length) delete iv[id];
+  recompute(); save(); updInfoRow(tr); renderSummary(); renderChart();
+});
+$('#tq2').addEventListener('input',renderInfoTable);
+$('#tq').addEventListener('input',renderTable);
+
+/* ---------- الرسم البياني ---------- */
+let chartObj=null;
+function renderChartSelect(){
+  const sel=$('#cdist'), cur=sel.value;
+  sel.innerHTML='<option value="">متوسط جميع الأحياء</option>'+DISTRICTS.map(d=>`<option value="${esc(d.id)}">${esc(d.ar)}${overall(d.id)==null?' — بلا بيانات':''}</option>`).join('');
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+function fmt(x){ return x==null?'—':(Math.round(x*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}); }
+function renderChart(){
+  const id=$('#cdist').value;
+  if(typeof Chart==='undefined'){ const e=$('#cempty'); e.hidden=false; $('#cbox').hidden=true; e.textContent='تعذّر تحميل مكتبة الرسم البياني (تحتاج اتصالًا بالإنترنت). باقي الصفحة يعمل ويُحفظ كالمعتاد.'; renderScore(id); return; }
+  const avg=state.indicators.map(i=>{
+    const xs=Object.values(comp).map(c=>c.scores[i.key]).filter(x=>x!=null);
+    return xs.length?r1(xs.reduce((a,b)=>a+b,0)/xs.length):null;
+  });
+  if(chartObj){ chartObj.destroy(); chartObj=null; }
+  const any=avg.some(x=>x!=null);
+  const empty=$('#cempty'), box=$('#cbox');
+  if(!state.indicators.length||!any||(id&&!comp[id])){
+    empty.hidden=false; box.hidden=true;
+    empty.textContent=!state.indicators.length?'أضف مؤشرات أولًا.':(id?'لا توجد بيانات مؤشرات لهذا الحي بعد.':'أدخل قيم المؤشرات في تبويب «إدخال البيانات» ليظهر الرسم.');
+    renderScore(id); return;
+  }
+  empty.hidden=true; box.hidden=false;
+  const labels=state.indicators.map(i=>i.name);
+  const ds=[];
+  if(id){
+    const c=comp[id];
+    ds.push({label:DMAP[id].ar,data:state.indicators.map(i=>c.scores[i.key]!=null?c.scores[i.key]:null),backgroundColor:tierOf(c.overall).color,borderRadius:4,raw:state.indicators.map(i=>rawVal(id,i))});
+    ds.push({label:'متوسط الأحياء',data:avg,backgroundColor:'#c3cad2',borderRadius:4});
+  } else ds.push({label:'متوسط الأحياء',data:avg,backgroundColor:'#0f6e56',borderRadius:4});
+  box.style.height=Math.max(340,state.indicators.length*(id?58:44))+'px';
+  Chart.defaults.font.family='"IBM Plex Sans Arabic","Segoe UI",Tahoma,sans-serif';
+  chartObj=new Chart($('#chart'),{type:'bar',data:{labels,datasets:ds},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:ds.length>1,position:'bottom'},
+        tooltip:{callbacks:{
+          label:c=>c.dataset.label+': '+fmt(c.parsed.x)+' / 100',
+          afterLabel:c=>{ const r=c.dataset.raw; if(!r) return ''; const i=state.indicators[c.dataIndex]; return r[c.dataIndex]==null?'':'القيمة: '+fmt(r[c.dataIndex])+(i.unit?' '+i.unit:''); }
+        }}},
+      scales:{x:{min:0,max:100,title:{display:true,text:'الدرجة من 100 (الأعلى أفضل)'},grid:{color:'#eee'}},y:{grid:{display:false}}}}});
+  renderScore(id);
+}
+function renderScore(id){
+  const sc=$('#sc');
+  if(!id){
+    const all=DISTRICTS.map(d=>overall(d.id)).filter(x=>x!=null);
+    const a=all.length?r1(all.reduce((x,y)=>x+y,0)/all.length):null;
+    sc.innerHTML=`<h2>متوسط جودة الحياة</h2><div class="big">${a==null?'—':a}<small>/100</small></div><div class="rank">على مستوى ${all.length} حيًا لها بيانات</div>`;
+    return;
+  }
+  const s=overall(id), d=DMAP[id];
+  if(s==null){ sc.innerHTML=`<h2>${esc(d.ar)}</h2><div class="big">—</div><div class="rank">لا توجد بيانات</div>`; return; }
+  const t=tierOf(s);
+  const ranked=DISTRICTS.map(x=>overall(x.id)).filter(x=>x!=null).sort((a,b)=>b-a);
+  const rank=ranked.indexOf(s)+1;
+  sc.innerHTML=`<h2>${esc(d.ar)}</h2><div class="big" style="color:${t.color}">${s}<small>/100</small></div>
+    <div style="margin-top:8px"><span class="tag" style="--c:${t.color}"><i></i>${t.label}</span></div>
+    <div class="rank">الترتيب ${rank} من ${ranked.length}</div>`;
+}
+$('#cdist').addEventListener('change',renderChart);
+
+/* ---------- استيراد وتصدير ---------- */
+function download(name,text,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type}));
+  a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+$('#expJson').addEventListener('click',()=>{ recompute(); download('qol-data.json',JSON.stringify(state,null,1),'application/json'); });
+$('#expCsv').addEventListener('click',()=>{
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const head=['الرقم','الحي',...state.indicators.map(i=>i.name),'المؤشر العام',...state.info.fields.map(f=>f.name)];
+  const lines=[head.map(q).join(',')];
+  DISTRICTS.forEach(d=>{
+    const v=state.values[d.id]||{}; const s=overall(d.id);
+    const iv=state.info.values[d.id]||{};
+    lines.push([d.id,d.ar,...state.indicators.map(i=>v[i.key]!=null?v[i.key]:''),s==null?'':s,...state.info.fields.map(f=>iv[f.key]!=null?iv[f.key]:'')].map(q).join(','));
+  });
+  download('hail-qol.csv','﻿'+lines.join('\r\n'),'text/csv;charset=utf-8');
+});
+function parseCSV(text){
+  text=text.replace(/^﻿/,'');
+  const first=text.split(/\r?\n/)[0]||'';
+  const delim=first.split(';').length>first.split(',').length?';':',';
+  const rows=[]; let row=[],cur='',qt=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(qt){ if(c==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else qt=false; } else cur+=c; }
+    else if(c==='"') qt=true;
+    else if(c===delim){ row.push(cur); cur=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cur); cur=''; if(row.some(x=>x!=='')) rows.push(row); row=[]; }
+    else cur+=c;
+  }
+  row.push(cur); if(row.some(x=>x!=='')) rows.push(row);
+  return rows;
+}
+$('#impCsv').addEventListener('change',async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  const rows=parseCSV(await f.text());
+  if(rows.length<2){ alert('الملف فارغ.'); return; }
+  const head=rows[0].map(h=>h.trim());
+  const idCol=head.findIndex(h=>h==='الرقم'||h.toLowerCase()==='id');
+  const nmCol=head.findIndex(h=>h==='الحي'||h.toLowerCase()==='name');
+  const cols=state.indicators.map(i=>head.findIndex(h=>h===i.name||h===i.key));
+  const fcols=state.info.fields.map(f=>head.findIndex(h=>h===f.name||h===f.key));
+  if(idCol<0&&nmCol<0){ alert('لم أجد عمود «الرقم» أو «الحي» في الصف الأول.'); return; }
+  if(cols.every(c=>c<0)&&fcols.every(c=>c<0)){ alert('لم أجد أعمدة بأسماء المؤشرات الحالية. استخدم «تصدير CSV» كنموذج.'); return; }
+  let done=0,miss=[];
+  rows.slice(1).forEach(r=>{
+    let d=idCol>=0?DISTRICTS.find(x=>x.id===String(r[idCol]).trim()):null;
+    if(!d&&nmCol>=0) d=DISTRICTS.find(x=>nk(x.ar)===nk(r[nmCol]));
+    if(!d){ miss.push(r[nmCol>=0?nmCol:idCol]); return; }
+    state.indicators.forEach((i,ix)=>{
+      if(cols[ix]<0) return;
+      const raw=String(r[cols[ix]]||'').trim().replace(',','.'); if(raw==='') return;
+      let n=Number(raw); if(isNaN(n)) return;
+      n=Math.max(0,n); if(i.kind==='index') n=Math.min(i.max,n);
+      (state.values[d.id]=state.values[d.id]||{})[i.key]=n;
+    });
+    state.info.fields.forEach((f,fx)=>{
+      if(fcols[fx]<0) return;
+      const raw=String(r[fcols[fx]]||'').trim().replace(',','.'); if(raw==='') return;
+      const n=Number(raw); if(isNaN(n)||n<0) return;
+      (state.info.values[d.id]=state.info.values[d.id]||{})[f.key]=n;
+    });
+    done++;
+  });
+  recompute(); save(); renderTable(); refreshAll();
+  alert('تم تحديث '+done+' حيًا.'+(miss.length?'\nلم يُطابَق: '+miss.slice(0,8).join('، ')+(miss.length>8?'…':''):''));
+});
+$('#impJson').addEventListener('change',async e=>{
+  const f=e.target.files[0]; e.target.value=''; if(!f) return;
+  try{
+    const d=JSON.parse(await f.text());
+    if(!Array.isArray(d.indicators)) throw 0;
+    if(!confirm('سيستبدل هذا الملف المؤشرات والقيم الحالية. متابعة؟')) return;
+    state=normState(d); state.seedV=2; recompute(); save(); renderInd(); renderThresholds(); renderTable(); refreshAll();
+  }catch(err){ alert('ملف غير صالح. استخدم ملف JSON مُصدَّرًا من هذه الصفحة.'); }
+});
+$('#demo').addEventListener('click',()=>{
+  if(!confirm('سيملأ كل الأحياء بقيم مؤشرات تجريبية عشوائية (للعرض فقط) ويستبدل قيم المؤشرات الحالية، أما بيانات الحي المُدخلة فلا تتغير. متابعة؟')) return;
+  DISTRICTS.forEach(d=>{
+    let n=0; for(const ch of d.id) n=(n*33+ch.charCodeAt(0))>>>0;
+    const v={};
+    state.indicators.forEach(i=>{
+      n=(n*1103515245+12345)>>>0; const r=(n>>>8)%1000/1000;
+      v[i.key]=i.kind==='count'?Math.round(r*150+3):Math.round(15+r*80);
+    });
+    state.values[d.id]=v;
+    n=(n*1103515245+12345)>>>0; const ar=Math.round(((n>>>8)%3000)/100+1);
+    n=(n*1103515245+12345)>>>0; const pk=(n>>>8)%9;
+    state.info.values[d.id]=Object.assign({area:ar,parks:pk},state.info.values[d.id]||{});
+  });
+  recompute(); save(); renderTable(); refreshAll();
+});
+$('#clear').addEventListener('click',()=>{
+  if(!confirm('مسح كل قيم المؤشرات لجميع الأحياء؟ (المؤشرات والأوزان تبقى)')) return;
+  state.values={}; recompute(); save(); renderTable(); refreshAll();
+});
+
+/* ---------- التبويبات ---------- */
+$('#tabs').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-tab]'); if(!b) return;
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='p-'+b.dataset.tab));
+  if(b.dataset.tab==='chart') renderChart();
+});
+
+function refreshAll(){ recompute(); renderMFOptions(); renderSummary(); renderTable(); renderInfoTable(); renderChartSelect(); renderChart(); renderUnm(); }
+renderInd(); renderThresholds(); refreshAll(); save();
+</script>
+</body>
+</html>
