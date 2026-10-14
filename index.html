@@ -471,7 +471,7 @@ window.addEventListener('resize',placeSheet); setTimeout(placeSheet,0);
 renderISel();
 renderChips();
 if(QD.src==='none'){
-  fetch('qol-data.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.indicators)) applyQD(d); }).catch(()=>{});
+  fetch('qol-data.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.indicators)) applyQD(d); }).catch(()=>{});
 }
 window.addEventListener('storage',e=>{
   if(e.key!=='hailQol.v2'||!e.newValue) return;

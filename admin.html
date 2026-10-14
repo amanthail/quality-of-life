@@ -190,6 +190,19 @@
       <p class="sub">تحدد على أساسها خانات التصنيف في الخريطة (متميز / محافظ / تحسين / أولوية عالية).</p>
       <div class="th-grid" id="thGrid"></div>
     </div>
+  
+    <div class="card" id="pubCard">
+      <h3 style="margin:0 0 4px;font-size:15px">النشر التلقائي على الموقع</h3>
+      <p class="note" style="margin:0 0 12px">كل تعديل تسويه يُرفع تلقائيًا إلى GitHub فتتحدث الخريطة للجميع (يظهر خلال دقيقة إلى بضع دقائق). المفتاح يُحفظ في هذا المتصفح فقط.</p>
+      <div class="opts" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end">
+        <label>المستودع <input id="pubRepo" type="text" dir="ltr" placeholder="owner/repo" style="width:220px"/></label>
+        <label>الفرع <input id="pubBranch" type="text" dir="ltr" style="width:90px"/></label>
+        <label>مفتاح الوصول (Token) <input id="pubToken" type="password" dir="ltr" autocomplete="off" placeholder="github_pat_…" style="width:260px"/></label>
+        <label style="display:flex;gap:6px;align-items:center"><input id="pubOn" type="checkbox"/> تفعيل النشر التلقائي</label>
+        <button class="btn pri" id="pubNow" type="button">انشر الآن</button>
+      </div>
+      <div id="pubStat" class="note" style="margin-top:10px"></div>
+    </div>
   </section>
 
   <!-- إدخال البيانات -->
@@ -369,6 +382,7 @@ function save(){
       recompute();
       localStorage.setItem(KEY,JSON.stringify(state));
       $('#saved').textContent='حُفظ تلقائيًا · '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+      if(typeof pubSchedule==='function') pubSchedule();
     } catch(e){ $('#saved').textContent='تعذّر الحفظ في هذا المتصفح — صدّر الملف يدويًا'; }
   },250);
 }
@@ -769,6 +783,46 @@ $('#tabs').addEventListener('click',e=>{
 
 function refreshAll(){ recompute(); renderMFOptions(); renderSummary(); renderTable(); renderInfoTable(); renderChartSelect(); renderChart(); renderUnm(); }
 renderInd(); renderThresholds(); refreshAll(); save();
+
+/* ===== النشر التلقائي إلى GitHub ===== */
+const PUBKEY='hailQol.pub';
+let pub={repo:'amanthail/quality-of-life',branch:'main',token:'',on:false};
+try{ Object.assign(pub,JSON.parse(localStorage.getItem(PUBKEY)||'{}')); }catch(e){}
+function pubSave(){ try{ localStorage.setItem(PUBKEY,JSON.stringify(pub)); }catch(e){} }
+function pubMsg(m,bad){ const el=$('#pubStat'); if(el){ el.textContent=m; el.style.color=bad?'#c0392b':''; } }
+let pubT=null, pubBusy=false, pubAgain=false;
+let pubReady=false; setTimeout(()=>{pubReady=true;},1500);
+function pubSchedule(){ if(!pubReady||!pub.on||!pub.token) return; clearTimeout(pubT); pubMsg('بانتظار النشر…'); pubT=setTimeout(pubNow,3000); }
+async function pubNow(){
+  if(!pub.token||!pub.repo){ pubMsg('أدخل المستودع والمفتاح أولًا.',true); return; }
+  if(pubBusy){ pubAgain=true; return; }
+  pubBusy=true; pubMsg('جارٍ النشر…');
+  try{
+    recompute();
+    const body=JSON.stringify(state,null,1);
+    const b64=btoa(unescape(encodeURIComponent(body)));
+    const url='https://api.github.com/repos/'+pub.repo+'/contents/qol-data.json';
+    const hd={'Authorization':'Bearer '+pub.token,'Accept':'application/vnd.github+json'};
+    let done=false, lastErr='';
+    for(let k=0;k<3&&!done;k++){
+      let sha;
+      const g=await fetch(url+'?ref='+encodeURIComponent(pub.branch)+'&t='+Date.now(),{headers:hd,cache:'no-store'});
+      if(g.ok){ sha=(await g.json()).sha; } else if(g.status!==404){ throw new Error('تعذّر الاتصال ('+g.status+') — تحقق من المفتاح واسم المستودع'); }
+      const r=await fetch(url,{method:'PUT',headers:{...hd,'Content-Type':'application/json'},body:JSON.stringify({message:'تحديث بيانات المؤشرات',content:b64,branch:pub.branch,...(sha?{sha}:{})})});
+      if(r.ok){ done=true; } else { lastErr=r.status+''; if(r.status!==409&&r.status!==422) throw new Error(r.status===401||r.status===403||r.status===404?'المفتاح لا يملك صلاحية الكتابة على هذا المستودع ('+r.status+')':'فشل النشر ('+r.status+')'); }
+    }
+    if(!done) throw new Error('تعارض في الحفظ ('+lastErr+') — أعد المحاولة');
+    pubMsg('تم النشر ✓ '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})+' — تظهر للجميع خلال دقيقة إلى بضع دقائق.');
+  }catch(e){ pubMsg('تعذّر النشر: '+(e&&e.message?e.message:e),true); }
+  pubBusy=false;
+  if(pubAgain){ pubAgain=false; pubSchedule(); }
+}
+$('#pubRepo').value=pub.repo; $('#pubBranch').value=pub.branch; $('#pubToken').value=pub.token; $('#pubOn').checked=!!(pub.on&&pub.token);
+$('#pubRepo').addEventListener('change',e=>{ pub.repo=e.target.value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/+$/,''); e.target.value=pub.repo; pubSave(); });
+$('#pubBranch').addEventListener('change',e=>{ pub.branch=e.target.value.trim()||'main'; pubSave(); });
+$('#pubToken').addEventListener('change',e=>{ pub.token=e.target.value.trim(); pubSave(); });
+$('#pubOn').addEventListener('change',e=>{ pub.on=e.target.checked; pubSave(); if(pub.on) pubSchedule(); else pubMsg('النشر التلقائي متوقف.'); });
+$('#pubNow').addEventListener('click',pubNow);
 </script>
 </body>
 </html>
