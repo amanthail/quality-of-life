@@ -1,0 +1,282 @@
+{
+ "indicators": [
+  {
+   "key": "visual",
+   "name": "مؤشر التشوه البصري",
+   "weight": 20,
+   "kind": "index",
+   "better": "low",
+   "method": "ratio",
+   "formula": "raw",
+   "max": 100,
+   "total": null,
+   "unit": "درجة"
+  },
+  {
+   "key": "r940",
+   "name": "عدد بلاغات 940",
+   "weight": 15,
+   "kind": "count",
+   "better": "low",
+   "method": "fixed",
+   "formula": "shareXarea",
+   "max": 5,
+   "total": null,
+   "unit": "بلاغ"
+  },
+  {
+   "key": "potholes",
+   "name": "عدد بلاغات الحفر",
+   "weight": 15,
+   "kind": "count",
+   "better": "low",
+   "method": "fixed",
+   "formula": "shareXarea",
+   "max": 5,
+   "total": null,
+   "unit": "بلاغ"
+  },
+  {
+   "key": "sidewalks",
+   "name": "عدد بلاغات الأرصفة",
+   "weight": 15,
+   "kind": "count",
+   "better": "low",
+   "method": "fixed",
+   "formula": "shareXarea",
+   "max": 5,
+   "total": null,
+   "unit": "بلاغ"
+  },
+  {
+   "key": "lighting",
+   "name": "عدد بلاغات الإنارة",
+   "weight": 15,
+   "kind": "count",
+   "better": "low",
+   "method": "fixed",
+   "formula": "shareXarea",
+   "max": 5,
+   "total": null,
+   "unit": "بلاغ"
+  }
+ ],
+ "values": {},
+ "info": {
+  "fields": [
+   {
+    "key": "area",
+    "name": "مساحة الحي",
+    "unit": "كم²"
+   },
+   {
+    "key": "population",
+    "name": "عدد السكان",
+    "unit": "نسمة"
+   },
+   {
+    "key": "parks",
+    "name": "عدد الحدائق",
+    "unit": ""
+   },
+   {
+    "key": "licenses",
+    "name": "عدد الرخص",
+    "unit": "رخصة"
+   }
+  ],
+  "values": {
+   "19340287": {
+    "population": 20261,
+    "area": 1.823
+   },
+   "19340294": {
+    "population": 1848,
+    "licenses": 17,
+    "area": 4.44
+   },
+   "19340295": {
+    "area": 1.986
+   },
+   "19340297": {
+    "population": 7002,
+    "licenses": 10,
+    "area": 23.117
+   },
+   "19340310": {
+    "population": 6553,
+    "parks": 1,
+    "licenses": 115
+   },
+   "19340320": {
+    "population": 10872,
+    "parks": 1,
+    "licenses": 85,
+    "area": 5.19
+   },
+   "19340324": {
+    "population": 10304,
+    "parks": 1,
+    "licenses": 114
+   },
+   "19340326": {
+    "population": 2365,
+    "parks": 7,
+    "licenses": 21
+   },
+   "19340328": {
+    "population": 10064,
+    "parks": 19,
+    "licenses": 479
+   },
+   "19340329": {
+    "population": 1162,
+    "licenses": 4
+   },
+   "19340339": {
+    "population": 1502,
+    "parks": 5,
+    "licenses": 52,
+    "area": 32.17
+   },
+   "19340340": {
+    "area": 24.834
+   },
+   "19340342": {
+    "area": 1.967
+   },
+   "19340344": {
+    "population": 16062,
+    "parks": 2,
+    "licenses": 598,
+    "area": 8.121
+   },
+   "19340345": {
+    "population": 9452,
+    "parks": 5,
+    "licenses": 324,
+    "area": 4.174
+   },
+   "19340346": {
+    "population": 23147,
+    "parks": 2,
+    "licenses": 310,
+    "area": 8.075
+   },
+   "19340347": {
+    "population": 14700,
+    "parks": 1,
+    "licenses": 221,
+    "area": 12.048
+   },
+   "19340351": {
+    "population": 44704,
+    "parks": 23,
+    "licenses": 1256,
+    "area": 12.378
+   },
+   "19340352": {
+    "population": 4136,
+    "parks": 4,
+    "licenses": 195,
+    "area": 3.789
+   },
+   "19340353": {
+    "population": 1814,
+    "parks": 3,
+    "licenses": 90,
+    "area": 2.334
+   },
+   "19340354": {
+    "population": 13627,
+    "parks": 9,
+    "licenses": 566,
+    "area": 4.579
+   },
+   "19340355": {
+    "population": 8567,
+    "parks": 12,
+    "licenses": 153,
+    "area": 2.786
+   },
+   "19340356": {
+    "population": 22080,
+    "parks": 5,
+    "licenses": 96,
+    "area": 5.255
+   },
+   "19340359": {
+    "population": 1652,
+    "licenses": 16
+   },
+   "19340360": {
+    "population": 1588,
+    "licenses": 67,
+    "area": 1.151
+   },
+   "19340361": {
+    "population": 17865,
+    "parks": 3,
+    "licenses": 245,
+    "area": 8.13
+   },
+   "19340362": {
+    "population": 5778,
+    "parks": 9,
+    "licenses": 171,
+    "area": 2.679
+   },
+   "19340364": {
+    "population": 15800,
+    "parks": 2,
+    "licenses": 313,
+    "area": 5.483
+   },
+   "19340365": {
+    "population": 13968,
+    "parks": 7,
+    "licenses": 294,
+    "area": 3.086
+   },
+   "19340366": {
+    "area": 1.146
+   },
+   "19340367": {
+    "area": 0.605
+   },
+   "19340368": {
+    "population": 1579,
+    "licenses": 1055,
+    "area": 0.435
+   },
+   "19340369": {
+    "population": 3289,
+    "parks": 2,
+    "licenses": 156,
+    "area": 1.428
+   },
+   "19340370": {
+    "population": 42880,
+    "parks": 5,
+    "licenses": 962,
+    "area": 2.663
+   },
+   "19340371": {
+    "population": 13258,
+    "parks": 15,
+    "licenses": 260,
+    "area": 4.845
+   }
+  }
+ },
+ "settings": {
+  "thresholds": [
+   75,
+   60
+  ]
+ },
+ "mv": 2,
+ "seedV": 2,
+ "applied": [],
+ "computed": {}
+}
