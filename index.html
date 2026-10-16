@@ -95,7 +95,8 @@
     font-size:12px;color:#41505e;box-shadow:0 6px 16px rgba(20,30,40,.12)
   }
   @media (min-width:900px){
-    .sheet{left:auto;right:14px;top:92px;bottom:14px;width:360px;max-height:none}
+    .sheet{left:auto;right:14px;top:92px;bottom:14px;width:280px;max-height:none}
+    .sheet.expanded{width:min(520px,calc(100vw - 28px))}
   }
 
   .chips{position:fixed;z-index:550;top:164px;right:14px;left:14px;display:flex;justify-content:safe center;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
@@ -115,9 +116,7 @@
   @media (min-width:900px){
     .chips{top:14px;right:308px;left:14px;padding-bottom:2px}
   }
-  @media (min-width:1200px){
-    .chips{left:308px}
-  }
+  @media (max-width:1250px){ .isbtn .isl{display:none} .isbtn{min-width:150px} }
   .leaflet-top.leaflet-left{top:70px;left:8px;z-index:600}
   .leaflet-control-layers{border:0;border-radius:10px;box-shadow:0 8px 18px rgba(20,30,40,.18);background:#fff}
   .leaflet-control-layers-toggle{
@@ -160,6 +159,17 @@
   .chip.on[style*="--c"]{box-shadow:inset 0 -3px 0 var(--c)}
   .leaflet-control-layers{border-radius:4px;box-shadow:0 2px 8px rgba(20,40,60,.2)}
   @media (min-width:900px){ .sheet{top:var(--st,92px)} .sheet.expanded{top:14px} }
+
+  .isbox{flex:0 0 auto;position:relative;margin-right:6px;padding-right:12px;border-right:1px solid var(--line)}
+  .isbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:3px;padding:8px 12px;font-family:inherit;font-size:13px;color:#2b3745;cursor:pointer;min-width:200px;text-align:right}
+  .isbtn .isl{font-size:12px;color:var(--mut);font-weight:600}
+  .isbtn b{font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+  .isbtn.on{border-color:var(--navy);box-shadow:inset 0 -3px 0 var(--navy)}
+  .isarr{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #5d6b78;flex:0 0 auto}
+  .ispop{position:fixed;z-index:900;background:#fff;border:1px solid var(--line);border-radius:3px;box-shadow:0 4px 16px rgba(20,40,60,.22);padding:4px 0;max-height:60vh;overflow:auto}
+  .isrow{display:flex;align-items:center;gap:10px;padding:9px 14px;font-size:13px;cursor:pointer;color:#17202a}
+  .isrow:hover{background:#f1f6f3}
+  .isrow input{width:16px;height:16px;accent-color:var(--navy);margin:0}
 </style>
 </head>
 <body>
@@ -170,7 +180,6 @@
   <select id="pick" aria-label="الأحياء">
     <option value="">كل الأحياء</option>
   </select>
-  <div class="isel" id="isel"></div>
 </div>
 </div>
 <div class="chips" id="chips" role="group" aria-label="تصنيف الأحياء حسب المؤشر"></div>
@@ -342,11 +351,11 @@ function select(id, fromMap){
   const score=viewScore(id);
   document.getElementById('dName').textContent=p.label;
   document.getElementById('dEn').textContent=p.name_en||'';
-  document.getElementById('dScore').innerHTML=(score==null?'—':score)+'<small>/100</small>';
-  document.getElementById('dScore').style.borderColor=tierOf(id).color;
+  document.getElementById('dScore').innerHTML=viewInds.length?'-':(score==null?'—':score)+'<small>/100</small>';
+  document.getElementById('dScore').style.borderColor=viewInds.length?'#cfd6df':tierOf(id).color;
   document.getElementById('dScore').style.borderWidth='2px';
   renderRaw(id);
-  document.getElementById('qolNote').textContent = viewInds.length ? 'من 100 — '+(viewInds.length>1?'متوسط المؤشرات المختارة':'درجة المؤشر المختار') : hasData(id) ? 'من 100 — محسوب من مؤشرات الحي' : 'من 100 — رقم تجريبي حتى تُضاف المؤشرات';
+  document.getElementById('qolNote').textContent = viewInds.length ? 'يظهر عند اختيار كل المؤشرات' : hasData(id) ? 'من 100 — محسوب من مؤشرات الحي' : 'من 100 — رقم تجريبي حتى تُضاف المؤشرات';
   document.getElementById('sheet').classList.add('open');
   Object.entries(layers).forEach(([k,v])=>{ if(map.hasLayer(v.layer)) v.layer.setStyle(styleFor(k,k===id)); });
   layers[id].layer.bringToFront();
@@ -366,14 +375,15 @@ function openChart(){
     return;
   }
   note.textContent='درجة كل مؤشر من 100 (الأعلى أفضل) مقارنةً بمتوسط الأحياء.';
-  const labels=QD.indicators.map(i=>i.name);
-  const own=QD.indicators.map(i=>c.scores[i.key]!=null?c.scores[i.key]:null);
-  const raw=QD.indicators.map(i=>{ const x=(QD.values[selected]||{})[i.key]; return (x==null||x==='')?null:Number(x); });
-  const avg=QD.indicators.map(i=>{
+  const inds=viewInds.length?QD.indicators.filter(i=>viewInds.includes(i.key)):QD.indicators;
+  const labels=inds.map(i=>i.name);
+  const own=inds.map(i=>c.scores[i.key]!=null?c.scores[i.key]:null);
+  const raw=inds.map(i=>{ const x=(QD.values[selected]||{})[i.key]; return (x==null||x==='')?null:Number(x); });
+  const avg=inds.map(i=>{
     const xs=Object.values(QD.computed).map(r=>r.scores[i.key]).filter(x=>x!=null);
     return xs.length?Math.round(xs.reduce((a,b)=>a+b,0)/xs.length*10)/10:null;
   });
-  document.querySelector('.chart-wrap').style.height=Math.max(320,QD.indicators.length*58)+'px';
+  document.querySelector('.chart-wrap').style.height=Math.max(320,inds.length*58)+'px';
   chartObj=new Chart(document.getElementById('chart'),{
     type:'bar',
     data:{labels, datasets:[
@@ -384,7 +394,7 @@ function openChart(){
       plugins:{legend:{display:true, position:'bottom'},
         tooltip:{callbacks:{
           label:t=>t.dataset.label+': '+fmtN(t.parsed.x)+' / 100',
-          afterLabel:t=>{ if(t.datasetIndex!==0||raw[t.dataIndex]==null) return ''; const u=QD.indicators[t.dataIndex].unit; return 'القيمة: '+fmtN(raw[t.dataIndex])+(u?' '+u:''); }
+          afterLabel:t=>{ if(t.datasetIndex!==0||raw[t.dataIndex]==null) return ''; const u=inds[t.dataIndex].unit; return 'القيمة: '+fmtN(raw[t.dataIndex])+(u?' '+u:''); }
         }}},
       scales:{x:{min:0,max:100,grid:{color:'#eee'}}, y:{grid:{display:false}}}}
   });
@@ -440,6 +450,7 @@ function renderChips(){
   };
   mk(null,'الكل','',total);
   TIERS.forEach(t=>mk(t.key,t.label,t.color,Object.keys(layers).filter(id=>tierKey(id)===t.key).length));
+  if(QD.indicators&&QD.indicators.length) chipsEl.appendChild(iselBox);
 }
 function setTier(key){
   activeTier=key;
@@ -454,16 +465,27 @@ function restyle(){
     v.layer.eachLayer(l=>{ if(l.setTooltipContent) l.setTooltipContent(v.props.label+(viewInds.length?' — '+(s==null?'لا توجد بيانات':s+'/100'):'')); });
   });
 }
+const iselBox=document.createElement('div'); iselBox.className='isbox';
+let isOpen=false, isPos={top:0,left:0,w:230};
+function closeIS(){ isOpen=false; const pp=iselBox.querySelector('.ispop'); if(pp) pp.style.display='none'; }
+document.addEventListener('click',e=>{ if(isOpen&&!iselBox.contains(e.target)) closeIS(); });
 function renderISel(){
-  const el=document.getElementById('isel');
   viewInds=viewInds.filter(k=>QD.indicators.some(i=>i.key===k));
-  if(!QD.indicators.length){ el.innerHTML=''; return; }
-  el.innerHTML='<div class="it">عرض حسب مؤشر</div>';
-  const mk=(label,on,fn)=>{ const b=document.createElement('button'); b.type='button'; b.className='ib'+(on?' on':''); b.textContent=label; b.addEventListener('click',fn); el.appendChild(b); };
-  mk('الكل',!viewInds.length,()=>{ viewInds=[]; viewChanged(); });
-  QD.indicators.forEach(i=>mk(i.name,viewInds.includes(i.key),()=>{ viewInds=viewInds.includes(i.key)?viewInds.filter(k=>k!==i.key):viewInds.concat(i.key); viewChanged(); }));
+  iselBox.innerHTML='';
+  if(!QD.indicators.length) return;
+  const names=viewInds.map(k=>(QD.indicators.find(i=>i.key===k)||{}).name);
+  const label=!viewInds.length?'كل المؤشرات':(viewInds.length===1?names[0]:viewInds.length+' مؤشرات');
+  const btn=document.createElement('button'); btn.type='button'; btn.className='isbtn'+(viewInds.length?' on':'');
+  btn.innerHTML='<span class="isl">عرض حسب مؤشر</span><b>'+esc(label)+'</b><i class="isarr"></i>';
+  const pop=document.createElement('div'); pop.className='ispop'; pop.style.display=isOpen?'block':'none';
+  if(isOpen){ pop.style.top=isPos.top+'px'; pop.style.left=isPos.left+'px'; pop.style.minWidth=isPos.w+'px'; }
+  const row=(text,checked,fn)=>{ const l=document.createElement('label'); l.className='isrow'; const c=document.createElement('input'); c.type='checkbox'; c.checked=checked; c.addEventListener('change',fn); const s=document.createElement('span'); s.textContent=text; l.appendChild(c); l.appendChild(s); pop.appendChild(l); };
+  row('كل المؤشرات',!viewInds.length,()=>{ viewInds=[]; viewChanged(true); });
+  QD.indicators.forEach(i=>row(i.name,viewInds.includes(i.key),()=>{ viewInds=viewInds.includes(i.key)?viewInds.filter(k=>k!==i.key):viewInds.concat(i.key); viewChanged(true); }));
+  btn.addEventListener('click',e=>{ e.stopPropagation(); isOpen=!isOpen; pop.style.display=isOpen?'block':'none'; if(isOpen){ const r=btn.getBoundingClientRect(); const w=Math.max(r.width,230); isPos={top:r.bottom+4,left:Math.max(8,Math.min(r.left,window.innerWidth-w-8)),w:w}; pop.style.top=isPos.top+'px'; pop.style.minWidth=w+'px'; pop.style.left=isPos.left+'px'; } });
+  iselBox.appendChild(btn); iselBox.appendChild(pop);
 }
-function viewChanged(){
+function viewChanged(keepOpen){
   renderISel(); setTimeout(placeSheet,0); renderChips(); restyle(); refill(q.value.trim()); applyFilter(pick.value);
 }
 function placeSheet(){ const f=document.querySelector('.filter'); if(f) document.documentElement.style.setProperty('--st',(f.getBoundingClientRect().bottom+12)+'px'); }
