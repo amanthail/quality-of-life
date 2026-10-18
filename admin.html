@@ -374,7 +374,7 @@ function totalOf(i){
 let TOT={};
 function metric(id,i){
   const x=rawVal(id,i); if(x==null) return null;
-  if(i.kind==='count'&&Number(x)===0) return null; /* لا بلاغات = لا رصد: ينخصم وزنه */
+  if(i.kind==='count'&&Number(x)===0){ if(i.key==='r940') return 0; return null; } /* 940: صفر بلاغات = حي ممتاز (الوزن كامل)؛ غيره: لا رصد فينخصم وزنه */
   if(i.kind==='count'&&i.formula==='shareXarea'){
     const t=TOT[i.key], a=num(((state.info.values[id])||{}).area);
     if(!(a>0)) return null;
@@ -409,7 +409,10 @@ function computeAll(){
       if(i.kind==='count'&&i.method==='fixed') pct[i.key]=r1(m*100);
       sc=r1(sc); scores[i.key]=sc; s+=i.weight*sc; w+=i.weight;
     });
-    if(w>0) out[id]={overall:r1(s/(WT>0?WT:w)),scores,pct};
+    const onlyZero940=Object.keys(scores).length===1&&scores.r940!=null&&Number(rawVal(id,state.indicators.find(x=>x.key==='r940')))===0;
+    /* الحي المرصود في بعض المؤشرات: المؤشر الناقص لا يُخصم (المقام = أوزان المؤشرات المرصودة) */
+    if(w>0&&!onlyZero940) out[id]={overall:r1(s/w),scores,pct};
+    else if(WT>0) out[id]={overall:0,scores:{},pct:{}}; /* لا رصد في أي مؤشر: أولوية عالية */
   });
   return out;
 }
