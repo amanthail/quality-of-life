@@ -110,13 +110,24 @@ html,body{margin:0;background:var(--bg);font-family:"IBM Plex Sans Arabic","Sego
  .top h1{font-size:16px}
  .legend{font-size:11px;gap:8px;padding:6px 8px}
 }
+
+.dtip{background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:0;direction:rtl;font-family:inherit}
+.dtip.leaflet-tooltip-top:before{border-top-color:#fff}
+.tp{min-width:200px;padding:7px 9px;font-size:11.5px;color:var(--ink)}
+.tp .th{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+.tp .th b{font-size:13px}
+.tp .tg{color:#fff;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700;white-space:nowrap}
+.tp .tr{display:flex;align-items:center;gap:6px;padding:1.5px 0}
+.tp .tr i{width:8px;height:8px;border-radius:50%;flex:none}
+.tp .tr span{flex:1;color:#4a5866}
+.tp .tr b{font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
 <div class="app">
   <header class="top">
     <div>
-      <h1 id="ttl">ملخص الأمانة — جميع الأحياء</h1>
+      <h1 id="ttl">مؤشر جودة الحياة — جميع الأحياء</h1>
       <div class="sub">اضغط على مؤشر لعرضه على الخريطة (يمكن اختيار أكثر من مؤشر)</div>
     </div>
     <label class="mon"><span>الفترة</span><select id="monSel" aria-label="الفترة"></select></label>
@@ -147,11 +158,7 @@ html,body{margin:0;background:var(--bg);font-family:"IBM Plex Sans Arabic","Sego
       <button class="btn" id="detailsBtn" type="button">عرض مؤشرات الحي</button>
     </aside>
     <section class="mapcard">
-      <div class="mapbar">
-        <div class="chips" id="chips" role="group" aria-label="تصنيف الأحياء"></div>
-        <div class="mt">تصنيف الأحياء</div>
-      </div>
-      <div id="map"></div>
+            <div id="map"></div>
       <div class="legend">
         <span><i style="background:var(--good)"></i>جيد</span>
         <span><i style="background:var(--mid)"></i>يحتاج تحسينًا</span>
@@ -219,7 +226,7 @@ function curC(){ const p=QD.periods&&QD.periods[viewMonth]; return (p&&p.compute
 function curV(id){ const p=QD.periods&&QD.periods[viewMonth]; return Object.assign({},QD.values[id]||{},(p&&p.values&&p.values[id])||{}); }
 const MN=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 function monLabel(m){ const a=m.split('-'); return MN[+a[1]-1]+' '+a[0]; }
-function computeQol(id){ const c=curC()[id]; return c?c.overall:null; }
+function computeQol(id){ const c=curC()[id]; if(!c||!c.scores||!Object.keys(c.scores).length) return null; const v=curV(id); const any=QD.indicators.some(i=>{ const x=v[i.key]; return x!=null&&x!==''&&(i.kind!=='count'||Number(x)>0); }); return any?c.overall:null; }
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function parkWord(n){ n=Math.round(Number(n)); if(n===2) return 'حديقتان'; return (n===0||(n>=3&&n<=10))?'حدائق':'حديقة'; }
 function fmtN(x){ return (Math.round(x*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}); }
@@ -258,7 +265,7 @@ GEO.features.forEach(f=>{
     style:styleFor(id,false),
     onEachFeature:(feat,lyr)=>{
       lyr.on('click', ()=>selectDistrict(id));
-      lyr.bindTooltip(feat.properties.label,{sticky:true,direction:'center'});
+      lyr.bindTooltip('…',{sticky:true,direction:'top',opacity:1,className:'dtip'});lyr.on('mouseover',()=>{lyr.setTooltipContent(tipHtml(id));});
     }
   });
   layer.addTo(group);
@@ -308,9 +315,9 @@ function indAgg(i){
 }
 
 function renderTitle(){
-  let t='ملخص الأمانة — جميع الأحياء';
-  if(scope==='muni'&&viewMuni) t='ملخص '+scopeName()+' — '+scopeIds().length+' حي';
-  if(scope==='district') t=selected?'ملخص حي '+layers[selected].props.label:'اختر حيًا';
+  let t='مؤشر جودة الحياة — جميع الأحياء';
+  if(scope==='muni'&&viewMuni) t='مؤشر جودة الحياة — '+scopeName()+' — '+scopeIds().length+' حي';
+  if(scope==='district') t=selected?'مؤشر جودة الحياة — حي '+layers[selected].props.label:'اختر حيًا';
   if(viewMonth!=='all') t+=' · '+monLabel(viewMonth);
   $('ttl').textContent=t;
 }
@@ -328,7 +335,7 @@ function renderKpis(){
   });
 }
 function renderChips(){
-  const box=$('chips'); box.innerHTML='';
+  const box=$('chips'); if(!box) return; box.innerHTML='';
   const ids=allIds().filter(inMuni);
   const mk=(key,label,color,count)=>{
     const b=document.createElement('button'); b.type='button'; b.className='chip'+(activeTier===key?' on':'');
@@ -395,7 +402,7 @@ function renderSide(){
   let rk='';
   if(isD&&!filt&&S!=null){ const all=allIds().map(id=>viewScore(id)).filter(x=>x!=null); rk='<div class="rk">الترتيب: '+(1+all.filter(x=>x>S).length)+' من '+all.length+'</div>'; }
   const missing=isD?QD.indicators.filter(i=>sc(selected,i.key)==null).map(i=>i.name):[];
-  ql.innerHTML='<h4>مؤشر جودة الحياة'+(isD?' في الحي':'')+'</h4><div class="qin"><div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="44" fill="none" stroke-width="9"/>'+(dash>0?'<circle cx="50" cy="50" r="44" fill="none" stroke="'+col+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+dash+' '+C+'"/>':'')+'</svg><div class="tx"><span dir="ltr">'+((filt||S==null)?'-':fmtN(r1(S)))+'<small>/100</small></span></div></div>'
+  ql.innerHTML='<div class="qin"><div class="ring"><svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="44" fill="none" stroke-width="9"/>'+(dash>0?'<circle cx="50" cy="50" r="44" fill="none" stroke="'+col+'" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+dash+' '+C+'"/>':'')+'</svg><div class="tx"><span dir="ltr">'+((filt||S==null)?'-':fmtN(r1(S)))+'<small>/100</small></span></div></div>'
     +'<div class="qs">'+((filt||S==null)?'':'<span class="tag" style="background:'+col+'">'+tierLabel(S)+'</span>')
     +(viewMonth!=='all'?'<div class="rk">'+monLabel(viewMonth)+'</div>':'')
     +'<div class="note">'+(filt?'يظهر عند اختيار كل المؤشرات':'اكتمال البيانات: '+(isD?fmtN(comp):fmtN(r1(comp)))+' من '+tot+' مؤشرات')+'</div>'+rk+'</div></div>';
@@ -486,6 +493,17 @@ window.addEventListener('storage',e=>{
   try{ const d=JSON.parse(e.newValue); if(d&&Array.isArray(d.indicators)) applyQD(d); }catch(err){}
 });
 L.control.layers({'فاتحة': light, 'خريطة': streets, 'قمر صناعي': satellite}, null, {position:'topleft', collapsed:true}).addTo(map);
+
+function tipHtml(id){
+  const c=curC()[id]; const has=c&&c.scores&&Object.keys(c.scores).length>0;
+  const S=viewScore(id); const col=tierColor(S);
+  let h='<div class="tp"><div class="th"><b>'+esc(layers[id].props.label)+'</b>'+(S==null?'<span class="tg" style="background:'+NOTIER.color+'">'+NOTIER.label+'</span>':'<span class="tg" style="background:'+col+'">'+fmtN(r1(S))+' · '+tierLabel(S)+'</span>')+'</div>';
+  QD.indicators.forEach(i=>{
+    const v=curV(id)[i.key], s=sc(id,i.key);
+    h+='<div class="tr"><i style="background:'+tierColor(s)+'"></i><span>'+esc(i.name)+'</span><b>'+((v==null||v===''||s==null)?'لا يوجد':fmtN(v))+'</b></div>';
+  });
+  return h+'</div>';
+}
 
 </script>
 </body>
