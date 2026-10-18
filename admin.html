@@ -325,13 +325,14 @@ function normState(d){
   if(Array.isArray(d.indicators)&&!(d.mv>=7)) d={...d,indicators:d.indicators.map(i=>WNEW[i.key]!=null?{...i,weight:WNEW[i.key]}:i)};
   if(Array.isArray(d.indicators)&&!(d.mv>=8)) d={...d,indicators:d.indicators.map(i=>MXNEW[i.key]!=null?{...i,max:MXNEW[i.key]}:i)};
   const rt=(d.settings&&Array.isArray(d.settings.thresholds))?d.settings.thresholds.map(Number):[];
-  const th=rt.length===2?rt:(rt.length===3?[rt[1],rt[2]]:[75,60]);
+  const th=rt.length===2?rt:(rt.length===3?[rt[1],rt[2]]:[75,55]);
+  if(!(d.mv>=9)&&th.length===2) th[1]=55;
   return {
     indicators:Array.isArray(d.indicators)?addMissingInds(d.indicators.map(normInd),d.mv):DEFAULT_INDICATORS.map(normInd),
     values:(d.values&&typeof d.values==='object')?d.values:{},
     info:{fields:DEFAULT_INFO.map(x=>({...x})),values:(d.info&&d.info.values&&typeof d.info.values==='object')?d.info.values:{}},
     settings:{thresholds:th},
-    mv:8,
+    mv:9,
     monthly:(d.monthly&&d.monthly.data&&Array.isArray(d.monthly.months))?d.monthly:null,
     seedV:Number(d.seedV)||0,
     applied:Array.isArray(d.applied)?d.applied.map(Number):[]
