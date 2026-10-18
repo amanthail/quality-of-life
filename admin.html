@@ -373,6 +373,7 @@ function totalOf(i){
 let TOT={};
 function metric(id,i){
   const x=rawVal(id,i); if(x==null) return null;
+  if(i.kind==='count'&&Number(x)===0) return null; /* لا بلاغات = لا رصد: ينخصم وزنه */
   if(i.kind==='count'&&i.formula==='shareXarea'){
     const t=TOT[i.key], a=num(((state.info.values[id])||{}).area);
     if(!(a>0)) return null;
