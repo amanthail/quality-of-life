@@ -160,6 +160,8 @@
   .leaflet-control-layers{border-radius:4px;box-shadow:0 2px 8px rgba(20,40,60,.2)}
   @media (min-width:900px){ .sheet{top:var(--st,92px)} .sheet.expanded{top:14px} }
 
+  .msel{border:1px solid var(--line);background:#fff;border-radius:3px;padding:8px 10px;font-family:inherit;font-size:13px;color:#2b3745;cursor:pointer;min-width:150px}
+  .msel.on{border-color:var(--navy);box-shadow:inset 0 -3px 0 var(--navy)}
   .isbox{flex:0 0 auto;position:relative;margin-right:6px;padding-right:12px;border-right:1px solid var(--line)}
   .isbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:3px;padding:8px 12px;font-family:inherit;font-size:13px;color:#2b3745;cursor:pointer;min-width:200px;text-align:right}
   .isbtn .isl{font-size:12px;color:var(--mut);font-weight:600}
@@ -242,7 +244,10 @@ function normQD(d){
     computed:(d.computed&&typeof d.computed==='object')?d.computed:{},
     values:(d.values&&typeof d.values==='object')?d.values:{},
     info:{fields:(d.info&&Array.isArray(d.info.fields))?d.info.fields.map(f=>({key:String(f.key),name:String(f.name),unit:f.unit==null?'':String(f.unit)})):[],values:(d.info&&d.info.values&&typeof d.info.values==='object')?d.info.values:{}},
-    settings:{thresholds:th}
+    settings:{thresholds:th},
+    periods:(d.periods&&typeof d.periods==='object')?d.periods:{},
+    months:(d.monthly&&Array.isArray(d.monthly.months))?d.monthly.months.map(String):[],
+    last:(d.monthly&&d.monthly.last)?String(d.monthly.last):''
   };
 }
 function loadQD(){
@@ -250,21 +255,26 @@ function loadQD(){
   return Object.assign(normQD({}),{src:'none'});
 }
 let QD=loadQD();
-function computeQol(id){ const c=QD.computed&&QD.computed[id]; return c?c.overall:null; }
+let viewMonth='all';
+function curC(){ const p=QD.periods&&QD.periods[viewMonth]; return (p&&p.computed)||QD.computed||{}; }
+function curV(id){ const p=QD.periods&&QD.periods[viewMonth]; return Object.assign({},QD.values[id]||{},(p&&p.values&&p.values[id])||{}); }
+const MN=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+function monLabel(m){ const a=m.split('-'); return MN[+a[1]-1]+' '+a[0]; }
+function computeQol(id){ const c=curC()[id]; return c?c.overall:null; }
 function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function parkWord(n){ n=Math.round(Number(n)); if(n===2) return 'حديقتان'; return (n>=3&&n<=10)?'حدائق':'حديقة'; }
+function parkWord(n){ n=Math.round(Number(n)); if(n===2) return 'حديقتان'; return (n===0||(n>=3&&n<=10))?'حدائق':'حديقة'; }
 function fmtN(x){ return (Math.round(x*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}); }
 function renderRaw(id){
-  const box=document.getElementById('dRaw'), c=QD.computed&&QD.computed[id], v=QD.values[id]||{};
+  const box=document.getElementById('dRaw'), c=curC()[id], v=curV(id);
   let html='';
   if(c) html+=QD.indicators.map(i=>{
     if(viewInds.length&&!viewInds.includes(i.key)) return '';
-    const x=v[i.key]; if(x==null||x===''||c.scores[i.key]==null) return '';
-    return '<div class="rw"><span>'+esc(i.name)+'</span><b>'+fmtN(x)+(i.unit?' '+esc(i.unit):'')+'</b><em>'+((c.pct&&c.pct[i.key]!=null)?fmtN(c.pct[i.key])+'%':c.scores[i.key])+'</em></div>';
+    const x=v[i.key]; if(x==null||x===''||c.scores[i.key]==null) return '<div class="rw"><span>'+esc(i.name)+'</span><b style="color:#8a95a1;font-weight:600">لا يوجد</b><em></em></div>';
+    return '<div class="rw"><span>'+esc(i.name)+'</span><b>'+fmtN(x)+(i.unit?' '+esc(i.unit):'')+'</b><em>'+((c.pct&&c.pct[i.key]!=null)?(false?'':fmtN(c.pct[i.key])+'%'):c.scores[i.key])+'</em></div>';
   }).join('');
   const iv=(QD.info.values&&QD.info.values[id])||{};
   const rows=QD.info.fields.filter(f=>iv[f.key]!=null&&iv[f.key]!=='');
-  if(rows.length) html+='<div class="rt">بيانات الحي</div>'+rows.map(f=>'<div class="rw"><span>'+esc(f.name)+'</span><b>'+fmtN(iv[f.key])+(f.key==='parks'?' '+parkWord(iv[f.key]):(f.unit?' '+esc(f.unit):''))+'</b><em></em></div>').join('');
+  if(rows.length) html+='<div class="rt">بيانات الحي</div>'+rows.map(f=>'<div class="rw"><span>'+esc(f.name)+'</span><b>'+fmtN(iv[f.key])+(f.key.indexOf('parks')===0?' '+parkWord(iv[f.key]):(f.unit?' '+esc(f.unit):''))+'</b><em></em></div>').join('');
   box.innerHTML=html;
 }
 function hasData(id){ return computeQol(id)!=null; }
@@ -285,7 +295,7 @@ let activeTier=null;
 let viewInds=[];
 function viewScore(id){
   if(!viewInds.length) return qolFor(id);
-  const c=QD.computed&&QD.computed[id]; if(!c) return null;
+  const c=curC()[id]; if(!c) return null;
   let sw=0,s=0;
   viewInds.forEach(k=>{ const v=c.scores[k]; if(v==null) return; const ind=QD.indicators.find(i=>i.key===k); const w=(ind&&ind.weight>0)?ind.weight:1; sw+=w; s+=v*w; });
   return sw? Math.round(s/sw*10)/10 : null;
@@ -355,7 +365,7 @@ function select(id, fromMap){
   document.getElementById('dScore').style.borderColor=viewInds.length?'#cfd6df':tierOf(id).color;
   document.getElementById('dScore').style.borderWidth='2px';
   renderRaw(id);
-  document.getElementById('qolNote').textContent = viewInds.length ? 'يظهر عند اختيار كل المؤشرات' : hasData(id) ? 'من 100 — محسوب من مؤشرات الحي' : 'من 100 — رقم تجريبي حتى تُضاف المؤشرات';
+  document.getElementById('qolNote').textContent = (viewMonth!=='all'?monLabel(viewMonth)+' · ':'')+(viewInds.length ? 'يظهر عند اختيار كل المؤشرات' : hasData(id) ? 'من 100 — محسوب من '+Object.keys(curC()[id].scores).length+' من '+QD.indicators.length+' مؤشرات' : 'من 100 — رقم تجريبي حتى تُضاف المؤشرات');
   document.getElementById('sheet').classList.add('open');
   Object.entries(layers).forEach(([k,v])=>{ if(map.hasLayer(v.layer)) v.layer.setStyle(styleFor(k,k===id)); });
   layers[id].layer.bringToFront();
@@ -369,18 +379,18 @@ function openChart(){
   document.getElementById('chartTitle').textContent='مؤشرات · '+p.label;
   if(chartObj){ chartObj.destroy(); chartObj=null; }
   const note=document.getElementById('chartNote');
-  const c=QD.computed&&QD.computed[selected];
+  const c=curC()[selected];
   if(!c || !QD.indicators.length){
     note.textContent='لا توجد بيانات مؤشرات لهذا الحي بعد.';
     return;
   }
-  note.textContent='درجة كل مؤشر من 100 (الأعلى أفضل) مقارنةً بمتوسط الأحياء.';
+  note.textContent='درجة كل مؤشر من 100 (الأعلى أفضل) مقارنةً بمتوسط الأحياء'+(viewMonth!=='all'?' — '+monLabel(viewMonth):'')+'.';
   const inds=viewInds.length?QD.indicators.filter(i=>viewInds.includes(i.key)):QD.indicators;
   const labels=inds.map(i=>i.name);
   const own=inds.map(i=>c.scores[i.key]!=null?c.scores[i.key]:null);
-  const raw=inds.map(i=>{ const x=(QD.values[selected]||{})[i.key]; return (x==null||x==='')?null:Number(x); });
+  const raw=inds.map(i=>{ const x=curV(selected)[i.key]; return (x==null||x==='')?null:Number(x); });
   const avg=inds.map(i=>{
-    const xs=Object.values(QD.computed).map(r=>r.scores[i.key]).filter(x=>x!=null);
+    const xs=Object.values(curC()).map(r=>r.scores[i.key]).filter(x=>x!=null);
     return xs.length?Math.round(xs.reduce((a,b)=>a+b,0)/xs.length*10)/10:null;
   });
   document.querySelector('.chart-wrap').style.height=Math.max(320,inds.length*58)+'px';
@@ -451,6 +461,7 @@ function renderChips(){
   mk(null,'الكل','',total);
   TIERS.forEach(t=>mk(t.key,t.label,t.color,Object.keys(layers).filter(id=>tierKey(id)===t.key).length));
   if(QD.indicators&&QD.indicators.length) chipsEl.appendChild(iselBox);
+  if(QD.months&&QD.months.length) chipsEl.appendChild(monBox);
 }
 function setTier(key){
   activeTier=key;
@@ -485,12 +496,25 @@ function renderISel(){
   btn.addEventListener('click',e=>{ e.stopPropagation(); isOpen=!isOpen; pop.style.display=isOpen?'block':'none'; if(isOpen){ const r=btn.getBoundingClientRect(); const w=Math.max(r.width,230); isPos={top:r.bottom+4,left:Math.max(8,Math.min(r.left,window.innerWidth-w-8)),w:w}; pop.style.top=isPos.top+'px'; pop.style.minWidth=w+'px'; pop.style.left=isPos.left+'px'; } });
   iselBox.appendChild(btn); iselBox.appendChild(pop);
 }
+const monBox=document.createElement('div'); monBox.className='isbox mbox';
+function renderMon(){
+  if(viewMonth!=='all'&&!QD.months.includes(viewMonth)) viewMonth='all';
+  monBox.innerHTML='';
+  const sel=document.createElement('select'); sel.className='msel'+(viewMonth!=='all'?' on':'');
+  const o=(v,t)=>{ const e=document.createElement('option'); e.value=v; e.textContent=t; if(v===viewMonth) e.selected=true; sel.appendChild(e); };
+  o('all','كل الأشهر');
+  const lastM=QD.last?QD.last.slice(0,7):'';
+  QD.months.forEach(m=>{ let t=monLabel(m); if(m===lastM&&QD.last){ const dd=+QD.last.slice(8,10); const dim=new Date(+m.slice(0,4),+m.slice(5,7),0).getDate(); if(dd<dim) t+=' (حتى '+dd+')'; } o(m,t); });
+  sel.addEventListener('change',()=>{ viewMonth=sel.value; viewChanged(); if(selected) select(selected,false); });
+  monBox.appendChild(sel);
+}
 function viewChanged(keepOpen){
+  renderMon();
   renderISel(); setTimeout(placeSheet,0); renderChips(); restyle(); refill(q.value.trim()); applyFilter(pick.value);
 }
 function placeSheet(){ const f=document.querySelector('.filter'); if(f) document.documentElement.style.setProperty('--st',(f.getBoundingClientRect().bottom+12)+'px'); }
 window.addEventListener('resize',placeSheet); setTimeout(placeSheet,0);
-renderISel();
+renderISel(); renderMon();
 renderChips();
 if(QD.src==='none'){
   fetch('qol-data.json?v='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.indicators)) applyQD(d); }).catch(()=>{});
