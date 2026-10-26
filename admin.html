@@ -411,7 +411,12 @@ function computeAll(){
     });
     const onlyZero940=Object.keys(scores).length===1&&scores.r940!=null&&Number(rawVal(id,state.indicators.find(x=>x.key==='r940')))===0;
     /* الحي المرصود في بعض المؤشرات: المؤشر الناقص لا يُخصم (المقام = أوزان المؤشرات المرصودة) */
-    if(w>0&&!onlyZero940) out[id]={overall:r1(s/w),scores,pct};
+    /* مجموعة بلاغات الميدان: حفر/أرصفة/دهان شوارع/دهان بردورات/إنارة.
+       الحي الذي فيه بلاغات في بعضها: الناقص لا يُخصم. أما الحي الذي أصفار كلها فتُخصم أوزانها كاملة (يحتاج رصدًا ومتابعة) */
+    const FAM=['potholes','sidewalks','streetPaint','curbPaint','lighting'];
+    const famHas=FAM.some(k=>scores[k]!=null);
+    let famW=0; if(!famHas) FAM.forEach(k=>{ const ii=state.indicators.find(x=>x.key===k); if(ii&&ii.weight>0&&ids.some(i2=>metric(i2,ii)!=null)) famW+=ii.weight; });
+    if(w>0&&!onlyZero940) out[id]={overall:r1(s/(w+famW*0.5)),scores,pct}; /* الخصم مخفّف: نصف وزن المجموعة */
     else if(WT>0) out[id]={overall:0,scores:{},pct:{}}; /* لا رصد في أي مؤشر: أولوية عالية */
   });
   return out;
